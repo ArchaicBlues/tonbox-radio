@@ -1504,6 +1504,13 @@ function sliderValToGain(n) {
 function setEq(i) {
     //[0]=>Clear, [1]=>Neutral, [2]=>Warm, [3]=>Bass, [4]=>myEQ
     console.log("setEq(" + i + ")")
+    if (!eqSlider || !eqSlider.f40Hz) {
+        //eqSlider.json was not loaded yet (or getEqData() ran out of retries
+        //while the server was still busy) - retry instead of crashing
+        console.warn("setEq: eqSlider not loaded yet, retrying getEqData()");
+        getEqData();
+        return;
+    }
     currentFilterNum = i
     const setSliderValue = (id, value) => {
         const el = document.getElementById(id)

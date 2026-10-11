@@ -1,13 +1,10 @@
 /home/pi/media/usbmedium1/mediaServer/Music
 ├── Audio
 ├── Radio
-│   ├── GreenOnionsRadio
-│   ├── RadioArt-Flamenco
-│   ├── X12punks
+│   ├── AllBluesRadio
+│   ├── Classic Rock Legends Radio
 │   ├── XHoustonBluesRadio
-│   ├── XJazz90_1SmoothGroovesRadio
-│   ├── XJazz90_1WGMC-FM
-│   └── XRockinRhythmandBluesRadio
+│   └── XJazz90_1WGMC-FM
 └── Video
 
-11 directories
+8 directories

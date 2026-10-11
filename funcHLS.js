@@ -72,6 +72,17 @@ module.exports = function (required) {
       const chunkSize = (end - start) + 1;
 
       const stream = fs.createReadStream(path, { start, end });
+      //client can drop the connection mid-stream (e.g. flaky WLAN); without these
+      //handlers the resulting ECONNRESET/EPIPE is an uncaught exception that
+      //crashes the whole Node process instead of just this one request
+      stream.on('error', (streamError) => {
+        console.log('streamMP3 stream error:', streamError.code || streamError)
+        stream.destroy()
+      })
+      res.on('error', (resError) => {
+        console.log('streamMP3 response error:', resError.code || resError)
+        stream.destroy()
+      })
       res.writeHead(206, {
         'Access-Control-Allow-Origin': '*',
         'Content-Range': `bytes ${start}-${end}/${stat.size}`,

@@ -1,4 +1,22 @@
 //for request from server to client without using ESM only version 2.6.1. possible
+
+// Node beendet seit v15 den kompletten Prozess bei einer unhandled promise
+// rejection (z.B. ein async-Aufruf ohne await/.catch in einem setTimeout-
+// Callback). Damit ein einzelner solcher Fehler nicht den ganzen Server
+// abschießt, hier nur loggen statt abstürzen.
+process.on('unhandledRejection', (reason) => {
+    console.error('unhandledRejection:', reason);
+});
+
+// Ohne eigenen Listener ist ein synchroner/Event-Fehler (z.B. ein
+// ECONNRESET/EPIPE auf einem Response-/Socket-Objekt, wenn ein Client - etwa
+// über instabiles WLAN - mitten im Streaming die Verbindung abbricht) eine
+// uncaught exception, die den kompletten Node-Prozess beendet statt nur die
+// eine betroffene Anfrage.
+process.on('uncaughtException', (err) => {
+    console.error('uncaughtException:', err);
+});
+
 //defines
 global.constants = require('./defines.js')
 require('./funcsystem.js')();

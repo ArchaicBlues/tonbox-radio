@@ -489,6 +489,17 @@ module.exports = function (required) {
       });
 
       const videoStream = fs.createReadStream(videoPath);
+      //client can drop the connection mid-stream (e.g. flaky WLAN); without these
+      //handlers the resulting ECONNRESET/EPIPE is an uncaught exception that
+      //crashes the whole Node process instead of just this one request
+      videoStream.on("error", err => {
+        console.log("VIDEO STREAM ERROR:", err.code || err);
+        videoStream.destroy()
+      });
+      res.on("error", err => {
+        console.log("HTTP RESPONSE ERROR:", err.code || err);
+        videoStream.destroy()
+      });
       videoStream.pipe(res);
       return;
     }
@@ -538,6 +549,17 @@ module.exports = function (required) {
     res.writeHead(206, headers);
 
     const videoStream = fs.createReadStream(videoPath, { start: start, end: end });
+    //client can drop the connection mid-stream (e.g. flaky WLAN); without these
+    //handlers the resulting ECONNRESET/EPIPE is an uncaught exception that
+    //crashes the whole Node process instead of just this one request
+    videoStream.on("error", err => {
+      console.log("VIDEO STREAM ERROR:", err.code || err);
+      videoStream.destroy()
+    });
+    res.on("error", err => {
+      console.log("HTTP RESPONSE ERROR:", err.code || err);
+      videoStream.destroy()
+    });
     videoStream.pipe(res);
   },
   this.doAudioYT = function (ytID) {
