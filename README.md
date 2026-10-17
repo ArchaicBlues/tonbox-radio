@@ -29,7 +29,8 @@ are present in the UI but intentionally disabled as no-ops, marked with
 
 ```bash
 git clone https://github.com/archaicblues/tonbox.git
-cd tonbox
+mv tonbox ArchaicNodeEJS
+cd ArchaicNodeEJS
 npm install
 node server.js
 ```
