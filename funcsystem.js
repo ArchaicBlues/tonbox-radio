@@ -1225,11 +1225,11 @@ module.exports = function(required){
                 await doSystem(res)
                 return
             }
-            if (constants.PAYPAL_SANDBOX) {
-                //Sandbox-Testmodus: Freigabe-Prüfung läuft komplett durch, aber das echte
-                //Update wird absichtlich NICHT gestartet - sonst würde jeder Zahlungs-/
-                //Freigabetest auf diesem Gerät ein reales Update auslösen.
-                procStatus.text = "[Sandbox-Test] Freigabe erfolgreich, Update wird NICHT ausgeführt: " + result.message
+            if (constants.UPDATE_DRY_RUN) {
+                //Trockenlauf (unabhängig von PAYPAL_SANDBOX): Freigabe-Prüfung läuft komplett
+                //durch, aber das echte Update wird NICHT gestartet - sonst würde jeder
+                //Zahlungs-/Freigabetest auf diesem Gerät ein reales Update auslösen.
+                procStatus.text = "[Trockenlauf] Freigabe erfolgreich, Update wird NICHT ausgeführt: " + result.message
                 await doSystem(res)
                 return
             }
