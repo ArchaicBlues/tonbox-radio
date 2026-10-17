@@ -257,6 +257,27 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
         <hr style="border-color:rgb(236, 6, 6)">
             <button class="btn-primary" type="submit" id="theme-toggle" name='sys' value="DESIGN" style="font-size:1.0rem">Change View</button>&nbsp;&nbsp;
             <br><br>
+            <button class="btn-primary" type="submit" name='sys' value="UPDATE_TONBOX" style="font-size:1.0rem">Update Tonbox</button>
+            <div class="tv-empty" style="margin-top:6px;">MAC: <%- mac %> &nbsp; Secret: <%- settings.updateSecret %></div>
+            <% if (updateCheck && updateCheck.message && !updateCheck.allowed) { %>
+                <div class="glass-panel p-3 mb-4" style="text-align:center; margin-top:10px;">
+                    <div class="tv-empty"><%- updateCheck.message %></div>
+                    <% if (updateCheck.reason !== 'limit_reached') { %>
+                        <button class="btn-primary" type="button" style="font-size:1.0rem"
+                            onclick="payPalCheckout('<%- paypalActionUrl %>', '<%- paypalEmail %>', '<%- updatePrice %>', '<%- mac %>|<%- settings.updateSecret %>')">
+                            Jetzt bezahlen (PayPal)<%- paypalActionUrl.includes('sandbox') ? ' [Sandbox-Test]' : '' %>
+                        </button>
+                        <div class="tv-empty" style="margin-top:10px;">
+                            Oder: Die MAC-Adresse dieser Tonbox ist nicht registriert, aber bereits mit einer
+                            anderen Tonbox bezahlt? Email und Secret dieser bezahlten Tonbox eingeben und
+                            oben erneut auf "Update Tonbox" klicken:
+                        </div>
+                        <input type="text" name="claimEmail" placeholder="Email" style="margin:4px;">
+                        <input type="text" name="claimSecret" placeholder="Secret der bezahlten Tonbox" style="margin:4px; width:260px;">
+                    <% } %>
+                </div>
+            <% } %>
+            <br>
             <button class="btn-primary" type="submit" name='sys' value="CHECKTV" style="font-size:1.0rem">Check TV</button>
             <div class="tv-results">
                 <%
@@ -605,6 +626,36 @@ document.addEventListener('DOMContentLoaded', () => {
       themeBtn.querySelector('i').className = 'fas ' + (icons[nextTheme] || 'fa-palette');
     });
   });
+</script>
+<script>
+//Baut das PayPal "Buy Now" Formular dynamisch außerhalb des bestehenden Seiten-<form>
+//auf (ein verschachteltes <form> wäre ungültiges HTML und würde die anderen Buttons
+//auf dieser Seite durcheinanderbringen) und schickt es in einem neuen Tab ab.
+function payPalCheckout(actionUrl, business, amount, custom) {
+    const form = document.createElement('form');
+    form.action = actionUrl;
+    form.method = 'post';
+    form.target = '_blank';
+    const fields = {
+        cmd: '_xclick',
+        business: business,
+        item_name: 'Tonbox Software Update',
+        amount: amount,
+        currency_code: 'EUR',
+        custom: custom,
+        notify_url: 'https://archaicblues.de/tonbox-media/checkout/paypal-ipn.php'
+    };
+    for (const name in fields) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = fields[name];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+    form.remove();
+}
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {

@@ -39,6 +39,18 @@ function extractAlsaOutputName(line) {
   return match ? match[1] : (line || "").trim();
 }
 
+//pw-cli lists one alsa_output per sound card (HDMI, headphone jack, and -
+//when a HAT like the DAC+ is fitted - a third "soc_sound" one). Find the
+//sink matching wantSoc instead of assuming it sits at a fixed index, since
+//boxes without a HAT only have the first two and boxes with one have three.
+function pickAlsaOutputNode(lines, wantSoc) {
+  for (const line of lines) {
+    const name = extractAlsaOutputName(line);
+    if (name && name.includes("soc") === wantSoc) return name;
+  }
+  return extractAlsaOutputName(lines[0]);
+}
+
 module.exports = function (required) {
   this.killVideoCapture = function () {
     if (videoView) {
@@ -333,9 +345,7 @@ module.exports = function (required) {
         inf = inf.split("\n")
         let full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt >&1")
         let nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt | grep node.target >&1")
-        let nodeName = extractAlsaOutputName(inf[0])
-        if (!nodeName.includes("soc"))
-          nodeName = extractAlsaOutputName(inf[1])
+        let nodeName = pickAlsaOutputNode(inf, true)
         full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
         filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/tonbox.txt');
         await fs.writeFileSync(filePath, full);
@@ -350,9 +360,7 @@ module.exports = function (required) {
         inf = inf.split("\n")
         let full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt >&1")
         let nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt | grep node.target >&1")
-        let nodeName = extractAlsaOutputName(inf[0])
-        if (nodeName.includes("soc"))
-          nodeName = extractAlsaOutputName(inf[1])
+        let nodeName = pickAlsaOutputNode(inf, false)
         full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
         filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/tonbox.txt');
         await fs.writeFileSync(filePath, full);

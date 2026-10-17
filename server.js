@@ -424,7 +424,7 @@ app.get('/entry', function (req, res) {
 
         case "captureTape":
         pageInfo="Capture Tape"
-        procStatus.text = "USB Audio Capture Device: " + usbState.usbaudiocapture
+        procStatus.text = "Feature disabled in this BASIS build"
         rememberDB="audioCaptureTape"
         fireAndForget(doTape(res,false), "doTape")
         break;
@@ -586,11 +586,6 @@ app.post('/equalizer', urlencodedParser, function (req, res) {
 app.post('/audioCaptureTape', urlencodedParser, function (req, res) {
     procStatus.text = ""
     console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
-    if (usbState.usbaudiocapture == constants.USB_NOK){
-        procStatus.text = "No USB capture device connected"
-        setInitialPage(res)
-        return
-    }
 
     if (!req.body || req.body.Back) {
         //add JSON KeyPair
@@ -600,55 +595,10 @@ app.post('/audioCaptureTape', urlencodedParser, function (req, res) {
         return
     }
 
-    if (req.body.MonitorLevel) {
-        monitorLevel(res,'audioCaptureTape',req.body.MonitorLevel)
-        return
-    }
-
-
-    if (req.body.Analyze) {
-        console.log("Analyze Tape ")
-        progressInfo = ""
-        fireAndForget(audioTapeAnalyze(res), "audioTapeAnalyze")
-        return
-    }
-
-
-    if (req.body.Auto) {
-        if (!availableSpace("Music", 1073741824)) {//1GB
-            procStatus.text = "no free storage of 1GB available"
-            doTape(res,false)
-            return
-        }
-        if (req.body.tapename){
-            recAD = req.body
-            recAD.medium = "Tape"
-            if (!procStatus.stat) {
-                progressInfo = ""
-                fireAndForget(audioTapeRecord(res), "audioTapeRecord")
-            }else{
-                procStatus.text = "Failure: stop radio recording process first"
-                fireAndForget(doTape(res,false), "doTape")
-            }
-        }
-        else{
-            if (usbState.usbaudiocapture == "nok") {
-                procStatus.text="USB Audio Capture Device not installed"
-                setInitialPage(res)
-                return
-            }
-            procStatus.text = "no titel given"
-            fireAndForget(doTape(res,false), "doTape")
-        }
-        return
-    }
-    if (req.body.RecordingStop) {
-        fireAndForget(stopADconversion(), "stopADconversion")
-        progressInfo = ""  
-        fireAndForget(doTape(res,false), "doTape")
-        return
-    }
-    res.redirect("../audioCaptureTape")
+    //Tape capture is disabled in this BASIS build: every other button
+    //(MonitorLevel, Analyze, Start Recording, RecordingStop) must stay inert
+    procStatus.text = "Feature disabled in this BASIS build"
+    fireAndForget(doTape(res, false), "doTape")
 })
 
 
@@ -2154,6 +2104,11 @@ app.post('/system', urlencodedParser, async function (req, res) {
 
     if (req.body.sys == "CHECKTV") {
         checkTV(res)
+        return
+    }
+
+    if (req.body.sys == "UPDATE_TONBOX") {
+        await updateTonbox(res, req.body.claimEmail, req.body.claimSecret)
         return
     }
 

@@ -98,7 +98,22 @@ let constants = {
     //Marquee & ffmpegRecorder
     META_DATA_INTERVAL: 1000, //ms
     //Tonbox
-    SOFTWARE_VERSION: "280926"
+    SOFTWARE_VERSION: "161026",
+    //PayPal "Buy Now" Button (system.ejs), angezeigt wenn checkUpdateAllowed() ein Update
+    //ablehnt - TODO: eigene PayPal-Business-Email und Update-Preis eintragen (müssen mit
+    //EXPECTED_RECEIVER/EXPECTED_AMOUNT in webspace/paypal-ipn.php übereinstimmen!)
+    PAYPAL_BUSINESS_EMAIL: "niemann-k@t-online.de",
+    UPDATE_PRICE_EUR: "19.99",
+    //Testmodus: true = PayPal Sandbox (developer.paypal.com), es bewegt sich nie echtes
+    //Geld. false = echter Live-Betrieb. Vor dem Launch unbedingt auf false umstellen!
+    //PAYPAL_SANDBOX_BUSINESS_EMAIL ist die Email des Sandbox-Test-Verkäuferkontos
+    //(developer.paypal.com -> Sandbox -> Accounts) - muss mit EXPECTED_RECEIVER in
+    //webspace/paypal-ipn.php übereinstimmen, wenn PAYPAL_SANDBOX dort ebenfalls true ist.
+    PAYPAL_SANDBOX: true,
+    // https://developer.paypal.com/dashboard/accounts
+    PAYPAL_SANDBOX_BUSINESS_EMAIL: "sb-vr2ex53387493@business.example.com",
+    //Pass 4v>fjD3{
+    PAYPAL_SANDBOX_PERSONAL_EMAIL: "sb-430frw53401220@personal.example.com"
 }
 
 module.exports = Object.freeze(constants); // freeze prevents changes by users

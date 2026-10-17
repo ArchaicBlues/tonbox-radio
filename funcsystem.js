@@ -3,6 +3,7 @@ const constants = require('./defines.js');
 const fsPromises = require('fs/promises');
 const fs = require ('fs');
 const path = require("path");
+const crypto = require('crypto');
 const detectTV = require('./funcDLNA.js');
 
 
@@ -28,10 +29,15 @@ global.settings = {
         "filterIndex":"4",//MyEQ
         "youtubeKey":"",
         "discogsUserToken":"",
-        "myUSB": ""
+        "myUSB": "",
+        //per-device secret used to sign the "/tonbox-media/checkout" update-authorization
+        //request (see checkUpdateAllowed); generated once on first use, never transmitted
+        "updateSecret": ""
     },
 
 global.update = "false"
+//Ergebnis der letzten checkUpdateAllowed()-Prüfung, für den PayPal-Button in system.ejs
+global.updateCheck = {allowed:false, message:""}
 
 //mountpoints
 global.devADrecords = "nok"
@@ -1011,6 +1017,13 @@ module.exports = function(required){
     this.doSystem = async function (res){
     try{
         //await getIP()
+        var mac = await getMacAddress()
+        await ensureUpdateSecret()
+        //updateCheck wird NICHT hier automatisch neu geprüft - nur ein expliziter Klick
+        //auf "Update Tonbox" (updateTonbox()) löst die Prüfung gegen den Webspace aus.
+        //Ein einfacher Seitenaufruf zeigt also immer den Stand der letzten Prüfung.
+        var paypalActionUrl = constants.PAYPAL_SANDBOX ? "https://www.sandbox.paypal.com/cgi-bin/webscr" : "https://www.paypal.com/cgi-bin/webscr"
+        var paypalEmail = constants.PAYPAL_SANDBOX ? constants.PAYPAL_SANDBOX_BUSINESS_EMAIL : constants.PAYPAL_BUSINESS_EMAIL
         var SDData = await execCmd('df / >&1')
         let sysData = ""
         sysData += "Tonbox Software Version: " + constants.SOFTWARE_VERSION
@@ -1037,7 +1050,8 @@ module.exports = function(required){
 
         if (res) {
             pageInfo = "System"
-            res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, usb:usbState, 
+            res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, usb:usbState, mac:mac, updateCheck:updateCheck,
+            paypalEmail:paypalEmail, paypalActionUrl:paypalActionUrl, updatePrice:constants.UPDATE_PRICE_EUR,
             info:SDData, sys:sysData.toString(), settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
             treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, ipList:ipList})
             }
@@ -1047,7 +1061,8 @@ module.exports = function(required){
             console.log(err)
             if (res) {
                 pageInfo = "System"
-                res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:err, usb:usbState, 
+                res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:err, usb:usbState, mac:mac, updateCheck:updateCheck,
+                paypalEmail:paypalEmail, paypalActionUrl:paypalActionUrl, updatePrice:constants.UPDATE_PRICE_EUR,
                 info:helpData, sys:sysData, settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
                 treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords,ipList:ipList})
             }
@@ -1100,6 +1115,134 @@ module.exports = function(required){
             console.log("getIP: " + err)
             procStatus.text = "getIP: " + err
         }
+    },
+    this.getMacAddress = async function(){
+        for (const iface of ["eth0","wlan0"]){
+            try{
+                const mac = (await fsPromises.readFile("/sys/class/net/"+iface+"/address","utf8")).trim()
+                if (mac && mac !== "00:00:00:00:00:00") return mac
+            }catch(err){/* interface not present, try next */}
+        }
+        return ""
+    },
+    this.getWanIp = async function(){
+        const controller = new AbortController()
+        const timeoutId = setTimeout(()=>controller.abort(), 5000)
+        try{
+            const response = await fetch("https://api.ipify.org?format=text", {signal: controller.signal})
+            if (!response.ok) return ""
+            return (await response.text()).trim()
+        }catch(err){
+            console.log("getWanIp: " + err)
+            return ""
+        }finally{
+            clearTimeout(timeoutId)
+        }
+    },
+    //Fragt beim Webspace (archaicblues.de/tonbox-media/checkout) an, ob für diese Tonbox
+    //ein kostenfreies Update zulässig ist (Kunde ist in der Zahlungsliste). Die Anfrage wird
+    //mit einem pro Gerät einmalig erzeugten Secret signiert (HMAC-SHA256 über mac|wanIp|timestamp),
+    //damit MAC/WAN-IP (beide ohnehin sichtbar) nicht einfach gefälscht werden können -
+    //das Secret selbst verlässt die Tonbox nie.
+    this.ensureUpdateSecret = async function(){
+        if (!settings.updateSecret){
+            //8 Byte (16 Hex-Zeichen, 64 Bit) reichen gegen Online-Raten (keine Hardware-
+            //Brute-Force-Gefahr wie bei Passwort-Hashes) und sind beim manuellen Abschreiben
+            //zwischen zwei Tonboxen (siehe claimDeviceCheck) deutlich praktikabler als 256 Bit.
+            settings.updateSecret = crypto.randomBytes(8).toString("hex")
+            await writeSettings()
+        }
+        return settings.updateSecret
+    },
+    this.checkUpdateAllowed = async function(){
+        try{
+            await ensureUpdateSecret()
+            const mac = await getMacAddress()
+            const wanIp = await getWanIp()
+            const timestamp = Date.now()
+            const payload = mac + "|" + wanIp + "|" + timestamp
+            const signature = crypto.createHmac("sha256", settings.updateSecret).update(payload).digest("hex")
+
+            const controller = new AbortController()
+            const timeoutId = setTimeout(()=>controller.abort(), 10000)
+            try{
+                const response = await fetch("https://archaicblues.de/tonbox-media/checkout/checkout.php", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({mac, wanIp, timestamp, signature}),
+                    signal: controller.signal
+                })
+                const dat = await response.json()
+                return {allowed: !!dat.allowed, message: dat.message || (dat.allowed ? "Update freigegeben" : "Kein Update autorisiert")}
+            }finally{
+                clearTimeout(timeoutId)
+            }
+        }catch(err){
+            console.log("checkUpdateAllowed: " + err)
+            return {allowed:false, message:"Checkout-Server nicht erreichbar: " + err}
+        }
+    },
+    //Für Kunden, die bereits eine andere Tonbox bezahlt haben und ein weiteres (z.B.
+    //Ersatz-)Gerät kostenlos registrieren wollen: Email + Secret einer bereits bezahlten
+    //Tonbox als Nachweis (vom System-Tab der alten Box). Der Webspace prüft den Nachweis
+    //und eine Obergrenze (max. 4 Geräte pro Email), siehe webspace/claim.php.
+    this.claimDeviceCheck = async function(email, proofSecret){
+        try{
+            await ensureUpdateSecret()
+            const mac = await getMacAddress()
+
+            const controller = new AbortController()
+            const timeoutId = setTimeout(()=>controller.abort(), 10000)
+            try{
+                const response = await fetch("https://archaicblues.de/tonbox-media/checkout/claim.php", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({mac, secret:settings.updateSecret, email, proofSecret}),
+                    signal: controller.signal
+                })
+                const dat = await response.json()
+                return {allowed: !!dat.allowed, message: dat.message || (dat.allowed ? "Gerät zugeordnet" : "Zuordnung fehlgeschlagen"), reason: dat.reason}
+            }finally{
+                clearTimeout(timeoutId)
+            }
+        }catch(err){
+            console.log("claimDeviceCheck: " + err)
+            return {allowed:false, message:"claimDeviceCheck: " + err}
+        }
+    },
+    //vom (einzigen) "Update Tonbox" Button auf der System-Seite: sind Email+Secret-Felder
+    //ausgefüllt, wird der Nachweis-Pfad (claimDeviceCheck) versucht, sonst die normale
+    //MAC-Prüfung (checkUpdateAllowed). Startet bei Freigabe bashScript/sw_update.sh als
+    //eigenständigen (detached) Prozess, damit das Update den Neustart von Tonbox.service
+    //(am Ende von sw_apply_update.sh) überlebt.
+    this.updateTonbox = async function(res, claimEmail, claimSecret){
+        try{
+            const result = (claimEmail && claimSecret)
+                ? await claimDeviceCheck(claimEmail, claimSecret)
+                : await checkUpdateAllowed()
+            updateCheck = result
+            if (result.allowed && constants.PAYPAL_SANDBOX){
+                //Sandbox-Testmodus: Freigabe-Prüfung läuft komplett durch, aber das echte
+                //Update wird absichtlich NICHT gestartet - sonst würde jeder Zahlungs-/
+                //Freigabetest auf diesem Gerät ein reales sw_update.sh auslösen.
+                procStatus.text = "[Sandbox-Test] Freigabe erfolgreich, Update wird NICHT ausgeführt: " + result.message
+            }else if (result.allowed){
+                procStatus.text = "Update gestartet: " + result.message
+                const child = spawn("bash", ["bashScript/sw_update.sh"], {
+                    cwd: __dirname,
+                    detached: true,
+                    stdio: "ignore"
+                })
+                child.unref()
+            }else{
+                procStatus.text = result.message
+            }
+        }catch(err){
+            updateCheck = {allowed:false, message:"updateTonbox: " + err}
+            procStatus.text = updateCheck.message
+            console.log(procStatus.text)
+        }
+        await doSystem(res)
     },
     this.getAudioOut = async function(){
         try{        
@@ -1540,7 +1683,7 @@ module.exports = function(required){
             //pipewire bluetooth audio volume
             if (volume == constants.VOL_RPI_HEADPHONE_MIN) 
                 volume = 0
-            cmd = "pamixer --set-volume " + volume
+            cmd = "pamixer --set-volume " + Math.round(volume)
             console.log(cmd)
             await execCmd(cmd) 
         }catch(err){

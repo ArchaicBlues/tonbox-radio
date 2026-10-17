@@ -88,27 +88,7 @@ const am = document.getElementById("analyzerModal")
 
 
 async function openLevelModal() {
-    //await wichtig, da sonst 2 Server Anfragen gleichzeitig kommen
-    await fetch("/audioCaptureTape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            MonitorLevel: "start",
-        })
-    })
-
-    lm.classList.add("show");
-    lm.style.display = "flex";
-    es = new EventSource("/funcSSE");
-    es.addEventListener("message", function(event) {
-        console.log("event.data="+event.data);
-        const el = document.getElementById("levelValue")
-        if (el)
-            el.innerText = event.data;
-    });
-    es.addEventListener("result", function() {
-        es.close();
-    });
+    alert("Feature disabled in this BASIS build");
 }
 
 function stopAnalyzer() {
@@ -162,35 +142,7 @@ async function startAnalyzer() {
         return false; // stops form submission
     }
 
-    //await wichtig, da sonst 2 Server Anfragen gleichzeitig kommen
-    await fetch("/audioCaptureTape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            Analyze: "startAnalyzer",
-        })
-    })
-
-
-    console.log("open analyzer modal")
-    am.classList.add("show");
-    am.style.display = "flex";
-    es = new EventSource("/funcSSE");
-    es.addEventListener("message", function(event) {
-        console.log("event.data="+event.data);
-        const el = document.getElementById("analyzerValue")
-        if (el){
-            el.innerText = event.data;
-            // if (event.data.match("done!"))
-            //     stopAnalyzer()
-        }
-    });
-    es.addEventListener("result", function() {
-        console.log("received es.close")
-        es.close();
-        stopAnalyzer()
-    });
-//    return true; // allows submission
+    alert("Feature disabled in this BASIS build");
 }
 
 
@@ -200,39 +152,7 @@ async function startRadioRecording(title, time) {
         return;
     }
 
-    //await wichtig, da sonst 2 Server Anfragen gleichzeitig kommen
-    await fetch("/audioCaptureTape", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-            Auto: "no",
-            tapename:title,
-            stoptime:time
-        })
-    })
-
-
-    //open recordModal win
-    rm.classList.add("show");
-    rm.style.display = "flex";
-    es = new EventSource("/funcSSE");
-    es.addEventListener("message", function(event) {
-        console.log("event.data="+event.data);
-        const rV = document.getElementById("recordValue")
-        if (rV)
-            rV.innerText = event.data;
-    });
-    es.addEventListener("result", function() {
-        es.close();
-    });
-
-    //console.log("Recording started with title:", title);
-    console.log("Recording time:", time);
-
-    //.then(resp => resp.json())
-    //.then(data => {
-    //     //console.log("received end of recording:"+JSON.stringify(data))
-    //})
+    alert("Feature disabled in this BASIS build");
 }
 
 function stopRecording(){
