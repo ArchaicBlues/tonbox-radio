@@ -62,6 +62,7 @@ const SSE = require('./funcSSE');
 global.rememberDB = "";
 global.sseData = "";
 global.quit_HLS = false
+global.systemReady = false
 
 const path = require('path')
 //Upload: für eigene Images die in DISCOGS nicht vorhanden sind https://code-boxx.com/upload-files-nodejs-express/
@@ -235,6 +236,7 @@ function startWebApp() {
         console.log("nodeJS server listen on " + settings.ip + ":8000")
         console.log("__dirname=" + __dirname)
         logging("listen on " + settings.ip + ":8000")
+        global.systemReady = true
         startPowerUpAudio()
 
         //console.log('Plattform:', os.platform());
@@ -2470,6 +2472,27 @@ app.get("/resetUpdate", function routeHandler(req, res) {
     res.end(update, 'utf-8');
     return
 })
+
+app.get("/health", (req, res) => {
+    try {
+        let update = "idle";
+        if (fs.existsSync("help/update_status")) {
+            update = fs.readFileSync("help/update_status", "utf8").trim();
+        }
+        const systemReady = update === "installed" && global.systemReady === true;
+        res.json({
+            status: "ok",
+            update,
+            systemReady
+        });
+    } catch (err) {
+        res.status(500).json({
+            status: "error",
+            update: "unknown",
+            uptime: process.uptime()
+        });
+    }
+});
 
 
 app.get("/filter/eqSlider.json", function routeHandler(req, res) {

@@ -1212,37 +1212,176 @@ module.exports = function(required){
     },
     //vom (einzigen) "Update Tonbox" Button auf der System-Seite: sind Email+Secret-Felder
     //ausgefüllt, wird der Nachweis-Pfad (claimDeviceCheck) versucht, sonst die normale
-    //MAC-Prüfung (checkUpdateAllowed). Startet bei Freigabe bashScript/sw_update.sh als
-    //eigenständigen (detached) Prozess, damit das Update den Neustart von Tonbox.service
-    //(am Ende von sw_apply_update.sh) überlebt.
-    this.updateTonbox = async function(res, claimEmail, claimSecret){
-        try{
+    //MAC-Prüfung (checkUpdateAllowed) - erst bei Freigabe läuft die eigentliche
+    //Update-Ausführung (Spinner-Seite + systemd-run) weiter unten durch.
+    this.updateTonbox = async function (res, claimEmail, claimSecret) {
+        try {
             const result = (claimEmail && claimSecret)
                 ? await claimDeviceCheck(claimEmail, claimSecret)
                 : await checkUpdateAllowed()
             updateCheck = result
-            if (result.allowed && constants.PAYPAL_SANDBOX){
+            if (!result.allowed) {
+                procStatus.text = result.message
+                await doSystem(res)
+                return
+            }
+            if (constants.PAYPAL_SANDBOX) {
                 //Sandbox-Testmodus: Freigabe-Prüfung läuft komplett durch, aber das echte
                 //Update wird absichtlich NICHT gestartet - sonst würde jeder Zahlungs-/
-                //Freigabetest auf diesem Gerät ein reales sw_update.sh auslösen.
+                //Freigabetest auf diesem Gerät ein reales Update auslösen.
                 procStatus.text = "[Sandbox-Test] Freigabe erfolgreich, Update wird NICHT ausgeführt: " + result.message
-            }else if (result.allowed){
-                procStatus.text = "Update gestartet: " + result.message
-                const child = spawn("bash", ["bashScript/sw_update.sh"], {
-                    cwd: __dirname,
-                    detached: true,
-                    stdio: "ignore"
-                })
-                child.unref()
-            }else{
-                procStatus.text = result.message
+                await doSystem(res)
+                return
             }
-        }catch(err){
+        } catch (err) {
             updateCheck = {allowed:false, message:"updateTonbox: " + err}
             procStatus.text = updateCheck.message
             console.log(procStatus.text)
+            await doSystem(res)
+            return
         }
-        await doSystem(res)
+        try {
+            if (fs.existsSync("help/update_status")) {
+                fs.unlinkSync("help/update_status");
+            }
+            fs.writeFileSync("help/update_status", "running");
+            res.send(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <title>Updating...</title>
+
+                <style>
+                body {
+                    background: #000;
+                    color: #00d2ff;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    height: 100vh;
+                    font-size: 2rem;
+                    font-family: sans-serif;
+                    flex-direction: column;
+                }
+
+                .spinner {
+                    border: 6px solid #222;
+                    border-top: 6px solid #00d2ff;
+                    border-radius: 50%;
+                    width: 60px;
+                    height: 60px;
+                    margin-bottom: 30px;
+                    animation: spin 1s linear infinite;
+                }
+
+                @keyframes spin {
+                    100% { transform: rotate(360deg); }
+                }
+                </style>
+                </head>
+
+                <body>
+
+                <div class="spinner"></div>
+                <div>Updating system...<br>Please wait...</div>
+
+                <script>
+                let finished = false;
+                let retryCount = 0;
+
+                async function checkServer() {
+                    if (finished) return;
+
+                    try {
+                        const controller = new AbortController();
+
+                        const timeout = setTimeout(() => {
+                            controller.abort();
+                        }, 1500);
+
+                        const response = await fetch("/health?t=" + Date.now(), {
+                            cache: "no-store",
+                            signal: controller.signal
+                        });
+
+                        clearTimeout(timeout);
+
+                        const data = await response.json();
+
+                        const update = data.update || "idle";
+                        console.log("update state:", update);
+
+                        if (update === "running") {
+                            console.log("update running...");
+                        }
+
+                        if (update === "error") {
+                            document.body.innerHTML =
+                                '<div style="color:red;font-size:2rem;">Update failed</div>';
+                            return;
+                        }
+
+                        const systemReady = data.systemReady === true;
+
+                        if (update === "installed" && !systemReady) {
+                            console.log("update installed, waiting for system boot...");
+                        }
+
+                        if (systemReady === true) {
+
+                            finished = true;
+
+                            document.body.innerHTML =
+                                '<div style="color:#00d2ff;font-size:2rem;font-family:sans-serif;">' +
+                                'System ready...' +
+                                '</div>';
+
+                            // safe redirect
+                            window.location.href =
+                                window.location.origin + "/?v=" + Date.now();
+
+                            return;
+                        }
+
+                        // Continue polling until systemReady is true
+                        retryCount = 0;
+
+                    } catch (e) {
+
+                        retryCount++;
+                        console.log("waiting for server...", retryCount);
+                    }
+
+                    setTimeout(checkServer, 2000);
+                }
+
+                // start polling
+                checkServer();
+                </script>
+
+                </body>
+                </html>
+            `);
+
+            // ==========================
+            // START UPDATE PROCESS
+            // ==========================
+            const child = spawn("systemd-run", [
+                "--user",
+                "--unit=tonbox-update",
+                "--collect",
+                "/usr/bin/bash",
+                __dirname + "/bashScript/sw_update.sh"
+            ]);
+
+            child.on("error", (err) => {
+                console.error("Failed to start update script:", err);
+            });
+
+        } catch (err) {
+            console.error("Unexpected error during update:", err);
+        }
     },
     this.getAudioOut = async function(){
         try{        
