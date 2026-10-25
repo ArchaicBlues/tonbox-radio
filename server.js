@@ -1751,8 +1751,20 @@ app.post('/radioStation', urlencodedParser, async function (req, res) {
             nextOffset = 0;
         }
 
-        if ((!Array.isArray(radioFound) || radioFound.length <= nextOffset) && typeof loadRadioSearch === "function") {
+        if ((!Array.isArray(radioFound) || radioFound.length === 0) && typeof loadRadioSearch === "function") {
             await loadRadioSearch();
+        }
+
+        // Cumulative mode: keep already visible stations and append the next 50.
+        const desiredVisibleCount = nextOffset === 0
+            ? 50
+            : Math.max(50, nextOffset + 50);
+
+        // Bedarfsgesteuert statt im Voraus: nur so viele weitere Rohkandidaten aus der
+        // letzten Suche (radioRawCandidates, siehe retrieveRadiodata() in funcRadio.js)
+        // validieren, wie fuer die angeforderte Seite tatsaechlich gebraucht werden.
+        if (typeof ensureRadioStationsValidated === "function") {
+            await ensureRadioStationsValidated(desiredVisibleCount);
         }
 
         const totalStations = Array.isArray(radioFound) ? radioFound.length : 0;
@@ -1761,14 +1773,7 @@ app.post('/radioStation', urlencodedParser, async function (req, res) {
             return;
         }
 
-        if (nextOffset >= totalStations) {
-            nextOffset = totalStations;
-        }
-
-        // Cumulative mode: keep already visible stations and append the next 50.
-        const visibleCount = nextOffset === 0
-            ? Math.min(totalStations, 50)
-            : Math.min(totalStations, Math.max(50, nextOffset + 50));
+        const visibleCount = Math.min(totalStations, desiredVisibleCount);
 
         const pageStations = radioFound.slice(0, visibleCount).map((station, idx) => ({
             ...station,
@@ -1783,7 +1788,7 @@ app.post('/radioStation', urlencodedParser, async function (req, res) {
             vol: volumeAudioOut,
             play: radioPlayIndex,
             stationOffset: 0,
-            hasMoreStations: visibleCount < totalStations,
+            hasMoreStations: visibleCount < totalStations || (Array.isArray(radioRawCandidates) && radioValidatedUpTo < radioRawCandidates.length),
             nextOffset: visibleCount
         });
         return;

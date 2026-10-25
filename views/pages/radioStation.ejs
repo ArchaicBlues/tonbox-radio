@@ -310,11 +310,12 @@ padding-right: 5px;
                     </div>
 
                     <!-- Bitrate Selection -->
+                    <% const currentBitrate = (search && search.bitrate !== undefined && search.bitrate !== '') ? String(search.bitrate) : '128'; %>
                     <div class="bitrate-row">
-                        <label><input type="radio" name="bitrate" value="all"> All</label>
-                        <label><input type="radio" name="bitrate" value="128" checked> 128k</label>
-                        <label><input type="radio" name="bitrate" value="192"> 192k</label>
-                        <label><input type="radio" name="bitrate" value="320"> 320k</label>
+                        <label><input type="radio" name="bitrate" value="all" <%= currentBitrate === 'all' ? 'checked' : '' %>> All</label>
+                        <label><input type="radio" name="bitrate" value="128" <%= currentBitrate === '128' ? 'checked' : '' %>> 128k</label>
+                        <label><input type="radio" name="bitrate" value="192" <%= currentBitrate === '192' ? 'checked' : '' %>> 192k</label>
+                        <label><input type="radio" name="bitrate" value="320" <%= currentBitrate === '320' ? 'checked' : '' %>> 320k</label>
                         <button id="searchBtn" class="btn-modern btn-primary search-inline-btn" type="submit">
                             <i class="bi bi-search"></i> 
                             <span id="btnText">Search Radiostation</span>
@@ -336,7 +337,6 @@ padding-right: 5px;
 
                 <!-- Hidden Datalists (preserved for JS logic if needed, though replaced by modals roughly) -->
         <datalist id="countries">
-            <option value="All">
             <option value="AF, Afghanistan">
             <option value="AL, Albania">
             <option value="DZ, Algeria">
@@ -499,7 +499,6 @@ padding-right: 5px;
             <option value="ZW, Zimbabwe">
         </datalist>
         <datalist id="genres">
-            <option value=" ">
             <option value="ACOUSTIC, Acoustic">
             <option value="AFROBEAT, Afrobeat">
             <option value="ALTERNATIVE, Alternative">

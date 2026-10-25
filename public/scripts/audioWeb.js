@@ -1673,7 +1673,22 @@ if (dirType === "Radio"){
     // window.openModal = openModal;
 }
 
+//Entfaerbt den aktuell "aktiven" Button (falls einer bekannt ist) und setzt den
+//lokalen Playing-Zustand zurueck - gemeinsam genutzt von Sender-Stop und Sender-Wechsel.
+function stopRadioVisualState() {
+    if (oldButtonObj) {
+        const glassBg = getComputedStyle(document.documentElement).getPropertyValue('--glass-bg');
+        oldButtonObj.style.backgroundColor = glassBg;
+    }
+    radioPlaying = false
+    resetMarquee()
+    oldTrack = ""
+}
+
 //Line-Out
+//Vorher hing "Start oder Stop?" nur an der globalen radioPlaying-Flag, nicht daran, ob
+//der GEKLICKTE Button ueberhaupt der aktive ist - ein Klick auf einen ANDEREN Sender
+//waehrend einer laeuft hat dadurch nur gestoppt statt zu wechseln (zweiter Klick noetig).
 function PlayRadioBars(id, i, stat, name) {
     console.log("PlayRadioBars: " + id + "," + i + "," + stat + " " + name)
 
@@ -1687,43 +1702,16 @@ function PlayRadioBars(id, i, stat, name) {
         let state = rd[i].state ? rd[i].state : ""
         showStationName.innerHTML = country + " " + state + "<br>" + rd[i].name
     }
-    if (!radioPlaying) {
-        console.log("start pw-play on rpi server")
-        try {
-            const response = fetch("/radioStation", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ Playx: i })
-            });
-        } catch (err) {
-            console.log("post=" + err)
-        }
-        oldButtonObj = document.getElementById(id + i)
-        oldButtonObj.style.backgroundColor = 'green'; // Keep green or rely on class if preferred, user said it was OK
-        // if (audioCtx && audioCtx.state === 'suspended') {
-        //     audioCtx.resume().then(() => {
-        //         mediaElement.play();
-        //         console.log("mediaElement.play()")
-        //     });
-        // } else {
-        //     mediaElement.play();
-        //     console.log("suspended ? mediaElement.play()")
-        // }
-        mediaElement.play();
-        radioPlaying = true
-        visuBars()
-    } else {
+
+    const clickedButton = document.getElementById(id + i)
+    const isSameStation = radioPlaying && oldButtonObj === clickedButton
+
+    if (isSameStation) {
         console.log("radio stop")
-        // Get the CSS variable value
-        const glassBg = getComputedStyle(document.documentElement).getPropertyValue('--glass-bg');
-        // Apply it to your button
-        oldButtonObj.style.backgroundColor = glassBg;        
+        stopRadioVisualState()
         mediaElement.pause();
-        radioPlaying = false
-        // clearInterval(marqueeObj)
-        // resetMarquee()
         try {
-            const response = fetch('/radioStation', {
+            fetch('/radioStation', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ StopPlayx: "StopPlayx" })
@@ -1731,7 +1719,36 @@ function PlayRadioBars(id, i, stat, name) {
         } catch (err) {
             console.log("post=" + err)
         }
+        return
     }
+
+    console.log("start pw-play on rpi server")
+    if (radioPlaying) stopRadioVisualState() //alten Button entfaerben, Wechsel auf neuen Sender
+    try {
+        fetch("/radioStation", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Playx: i })
+        }).catch(err => {
+            console.log("post=" + err)
+            setDebugMessage("Sender konnte nicht gestartet werden", true)
+            stopRadioVisualState()
+        });
+    } catch (err) {
+        console.log("post=" + err)
+    }
+    oldButtonObj = clickedButton
+    oldButtonObj.style.backgroundColor = 'green';
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().then(() => {
+            mediaElement.play();
+        });
+    } else {
+        mediaElement.play();
+    }
+    radioPlaying = true
+    loadMarquee(name)
+    visuBars()
 }
 
 //------------------------------

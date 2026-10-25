@@ -36,9 +36,16 @@ global.radioSearch = {}
 global.radioFound = {}
 
 global.stationCount = 0
+//Rohe (unvalidierte, nach URL entdoppelte) Kandidaten der letzten Suche + wie viele davon
+//(von vorne an) bereits durch validateStation() gelaufen sind - ermöglicht bedarfsgesteuerte
+//Validierung: ein weiterer 50er-Block wird erst geprüft, wenn "Next 50 Stations" ihn
+//tatsächlich braucht, statt im Hintergrund eifrig alles durchzuprüfen (siehe retrieveRadiodata()
+//und den "NextStations"-Zweig in server.js).
+global.radioRawCandidates = []
+global.radioValidatedUpTo = 0
 global.radioPlayIndex = -1
 global.intervalRadio = null
-let latestRadioSearchToken = 0;
+
 
 //var possibleTags = "Available genre i.e :<br><br>" + "70s,80s,90s,disco,pop,musica romantica,rock,oldies, live, synth,90er,dance,eurodance,hiphop,rap,electronic,electronica,electropop,hits,house,<br>top40charts,jazz, blues, ska,classic rock,hard rock,heavy metal,metal,pop rock,punk,punk soft rock, classic hits,easy listening,hits,wacken radio bob,pop rock,punk, economy ...";
 
@@ -397,7 +404,6 @@ module.exports = function(){
     }
   },
   this.retrieveRadiodata = async function(res,countryCode,genre,station,bitrate) {
-    const searchToken = ++latestRadioSearchToken;
     radioFound = {}
     console.log("search country="+countryCode+" genre="+genre+" station="+station+" bitrate="+bitrate)
     if (countryCode === "all") countryCode = ""
@@ -412,7 +418,7 @@ module.exports = function(){
         name: radioUserSearch.station,
         bitrateMin: radioUserSearch.bitrate,
         bitrateMax: 320,
-        limit: 1000,
+        limit: 3000,
         order: "clickcount",
         reverse: true
       });
@@ -436,37 +442,36 @@ module.exports = function(){
     const uniqueByUrl = Array.from(new Map(allCandidates.map(item => [item.url, item])).values());
     console.log("found " + uniqueByUrl.length + " stations");
 
-    // Stage 1: validate the first page before rendering it.
-    const firstStageCandidates = uniqueByUrl.slice(0, 50);
-    const firstStage = await validateStation(firstStageCandidates);
-    radioFound = firstStage;
+    // Nur die erste Seite (50) sofort validieren. Der Rest bleibt unvalidiert in
+    // radioRawCandidates liegen und wird erst bedarfsgesteuert geprüft, wenn "Next 50
+    // Stations" ihn tatsächlich braucht (siehe "NextStations" in server.js) - kein
+    // Hintergrund-Loop mehr, der unabhängig davon weiterläuft, ob der Nutzer die Seite
+    // überhaupt noch ansieht.
+    radioRawCandidates = uniqueByUrl;
+    const firstPageCandidates = uniqueByUrl.slice(0, 50);
+    radioFound = await validateStation(firstPageCandidates);
+    radioValidatedUpTo = firstPageCandidates.length;
     stationCount = uniqueByUrl.length;
 
     res.render('pages/radioStation', {pageInfo:pageInfo,dat:stationCount, search:radioUserSearch,
       rd:radioFound, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(),
       pState:procStatus, rec:getRadioRec(),settings:settings,vol:volumeAudioOut,play:radioPlayIndex,
-      stationOffset:0, hasMoreStations:(firstStageCandidates.length < stationCount), nextOffset:firstStageCandidates.length});
-
-    // Stage 2: full validation in background
-    setImmediate(async () => {
-      try {
-        const validated = await validateStation(uniqueByUrl);
-        if (searchToken !== latestRadioSearchToken) {
-          console.log("skip outdated background validation result");
-          return;
-        }
-
-        radioFound = validated;
-        stationCount = radioFound.length;
-        console.log("found valid Stations " + radioFound.length + " stations");
-        procStatus.text = "Radiostation validation complete: " + radioFound.length + " valid stations";
-
-        const data = JSON.stringify(radioFound);
-        fs.writeFile('help/radioSearch.json', data, function (err) {});
-      } catch (err) {
-        console.log("background validateStation error", err);
-      }
-    });
+      stationOffset:0, hasMoreStations:(radioValidatedUpTo < radioRawCandidates.length), nextOffset:radioFound.length});
+  },
+  //Bedarfsgesteuerte Validierung fuer "Next 50 Stations" (server.js): prueft aus
+  //radioRawCandidates nur so viele weitere, noch ungeprüfte Kandidaten, wie noetig sind,
+  //damit radioFound mindestens desiredVisibleCount Einträge hat - validateStation() ist
+  //eine lokale Closure-Funktion dieses Moduls und daher von server.js aus nicht direkt
+  //aufrufbar, deshalb dieser Wrapper.
+  this.ensureRadioStationsValidated = async function(desiredVisibleCount){
+    while (Array.isArray(radioFound) && radioFound.length < desiredVisibleCount
+           && Array.isArray(radioRawCandidates) && radioValidatedUpTo < radioRawCandidates.length) {
+      const chunk = radioRawCandidates.slice(radioValidatedUpTo, radioValidatedUpTo + 50);
+      const validatedChunk = await validateStation(chunk);
+      radioFound = Array.from(new Map([...radioFound, ...validatedChunk].map(s => [s.url, s])).values());
+      radioValidatedUpTo += chunk.length;
+      stationCount = radioFound.length;
+    }
   },
   this.getScheduledJobsWithoutTimeout = function(){
     //DUMMY: Radio recording ("Add My Radio" / scheduled recordings) disabled
