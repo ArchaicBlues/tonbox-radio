@@ -98,12 +98,12 @@ let constants = {
     //Marquee & ffmpegRecorder
     META_DATA_INTERVAL: 1000, //ms
     //Tonbox
-    SOFTWARE_VERSION: "171026",
+    SOFTWARE_VERSION: "201026",
     //PayPal "Buy Now" Button (system.ejs), angezeigt wenn checkUpdateAllowed() ein Update
     //ablehnt - TODO: eigene PayPal-Business-Email und Update-Preis eintragen (müssen mit
     //EXPECTED_RECEIVER/EXPECTED_AMOUNT in webspace/paypal-ipn.php übereinstimmen!)
-    PAYPAL_BUSINESS_EMAIL: "niemann-k@t-online.de",
-    UPDATE_PRICE_EUR: "19.99",
+    PAYPAL_BUSINESS_EMAIL: "tonbox@archaicblues.de",
+    UPDATE_PRICE_EUR: "9.99",
     //Testmodus: true = PayPal Sandbox (developer.paypal.com), es bewegt sich nie echtes
     //Geld. false = echter Live-Betrieb. Vor dem Launch unbedingt auf false umstellen!
     //PAYPAL_SANDBOX_BUSINESS_EMAIL ist die Email des Sandbox-Test-Verkäuferkontos
