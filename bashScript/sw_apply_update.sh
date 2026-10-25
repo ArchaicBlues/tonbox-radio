@@ -15,6 +15,7 @@ echo "RSYNC START"
 rsync -a --delete \
   --exclude "node_modules" \
   --exclude ".git" \
+  --exclude ".settings.conf" \
   "$WORKDIR"/ "$APP"/
 echo "RSYNC DONE"
 
