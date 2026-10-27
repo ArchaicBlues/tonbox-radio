@@ -309,15 +309,16 @@ padding-right: 5px;
                             style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 0.7rem;">
                     </div>
 
-                    <!-- Bitrate Selection -->
-                    <% const currentBitrate = (search && search.bitrate !== undefined && search.bitrate !== '') ? String(search.bitrate) : '128'; %>
+                    <!-- Bitrate Selection: "Search Radiostation" always searches across all
+                         qualities (value="all") - the good/better/best quality refinement
+                         (128k/192k/320k) is shown below "Found .." once results exist, see
+                         there. -->
+                    <% const currentBitrate = (search && search.bitrate !== undefined && search.bitrate !== '') ? String(search.bitrate) : 'all'; %>
+                    <input type="hidden" name="bitrate" id="hiddenBitrate" value="<%- currentBitrate %>">
                     <div class="bitrate-row">
-                        <label><input type="radio" name="bitrate" value="all" <%= currentBitrate === 'all' ? 'checked' : '' %>> All</label>
-                        <label><input type="radio" name="bitrate" value="128" <%= currentBitrate === '128' ? 'checked' : '' %>> 128k</label>
-                        <label><input type="radio" name="bitrate" value="192" <%= currentBitrate === '192' ? 'checked' : '' %>> 192k</label>
-                        <label><input type="radio" name="bitrate" value="320" <%= currentBitrate === '320' ? 'checked' : '' %>> 320k</label>
-                        <button id="searchBtn" class="btn-modern btn-primary search-inline-btn" type="submit">
-                            <i class="bi bi-search"></i> 
+                        <button id="searchBtn" class="btn-modern btn-primary search-inline-btn" type="submit"
+                            onclick="document.getElementById('hiddenBitrate').value='all';">
+                            <i class="bi bi-search"></i>
                             <span id="btnText">Search Radiostation</span>
                         </button>
                     </div>
@@ -566,6 +567,15 @@ padding-right: 5px;
         <% const canShowMore = (typeof hasMoreStationsLocal === 'boolean') ? hasMoreStationsLocal : (computedNextOffset < totalStations); %>
         <div class="glass-panel p-3 mb-4 text-center">
             Found <%- Math.min(pageOffset + rd.length, totalStations) %> of <%- totalStations %>
+            <!-- Quality refine: re-submits the search immediately with the chosen bitrate. -->
+            <div class="bitrate-row">
+                <label title="Stream-Quality 128k/bits"><input type="radio" name="bitrateRefine" value="128" <%= currentBitrate === '128' ? 'checked' : '' %>
+                    onchange="document.getElementById('hiddenBitrate').value='128'; document.getElementById('mainForm').submit();"> good</label>
+                <label title="Stream-Quality 192k/bits"><input type="radio" name="bitrateRefine" value="192" <%= currentBitrate === '192' ? 'checked' : '' %>
+                    onchange="document.getElementById('hiddenBitrate').value='192'; document.getElementById('mainForm').submit();"> better</label>
+                <label title="Stream-Quality 320k/bits"><input type="radio" name="bitrateRefine" value="320" <%= currentBitrate === '320' ? 'checked' : '' %>
+                    onchange="document.getElementById('hiddenBitrate').value='320'; document.getElementById('mainForm').submit();"> best</label>
+            </div>
             <!-- <div class="d-flex justify-content-between align-items-center mb-2">
                 <h5 class="m-0">Radiostation(s): <span style="color: var(--accent-color);"><%- rd.length %></span></h5>
             </div> -->
