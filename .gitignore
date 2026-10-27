@@ -5,6 +5,12 @@ node_modules/
 .settings.conf
 client_secret_*.json
 
+# Webspace backend (checkout/payment/update-delivery) - deployed separately via
+# FTP/hosting file manager, never part of the public source repo. Contains
+# hardcoded secrets (encryption key, Stripe webhook signing secrets) and would
+# also ship customers.csv/*.log if ever generated inside this tree.
+/php/
+
 # Compiled binaries (architecture-specific, not for source distribution)
 /gramocli
 /songrec

@@ -98,24 +98,21 @@ let constants = {
     //Marquee & ffmpegRecorder
     META_DATA_INTERVAL: 1000, //ms
     //Tonbox
-    SOFTWARE_VERSION: "201026",
-    //PayPal "Buy Now" Button (system.ejs), angezeigt wenn checkUpdateAllowed() ein Update
-    //ablehnt - TODO: eigene PayPal-Business-Email und Update-Preis eintragen (müssen mit
-    //EXPECTED_RECEIVER/EXPECTED_AMOUNT in webspace/paypal-ipn.php übereinstimmen!)
-    PAYPAL_BUSINESS_EMAIL: "tonbox@archaicblues.de",
+    SOFTWARE_VERSION: "271026",
+    //Stripe "Buy Now" Button (system.ejs -> /buyUpdate -> createCheckoutSession.php),
+    //angezeigt wenn checkUpdateAllowed() ein Update ablehnt. Die Checkout Session wird
+    //serverseitig per Stripe-API erzeugt (kein Payment Link mehr - der übernahm
+    //client_reference_id nicht zuverlässig aus der URL in die Session), die Preisangabe
+    //hier ist nur fürs Label - der tatsächliche Preis steht in PRICE_CENTS in
+    //webspace/createCheckoutSession.php und muss hiermit übereinstimmen.
     UPDATE_PRICE_EUR: "9.99",
-    //Testmodus: true = PayPal Sandbox (developer.paypal.com), es bewegt sich nie echtes
-    //Geld. false = echter Live-Betrieb. Vor dem Launch unbedingt auf false umstellen!
-    //PAYPAL_SANDBOX_BUSINESS_EMAIL ist die Email des Sandbox-Test-Verkäuferkontos
-    //(developer.paypal.com -> Sandbox -> Accounts) - muss mit EXPECTED_RECEIVER in
-    //webspace/paypal-ipn.php übereinstimmen, wenn PAYPAL_SANDBOX dort ebenfalls true ist.
-    PAYPAL_SANDBOX: true,
-    // https://developer.paypal.com/dashboard/accounts
-    PAYPAL_SANDBOX_BUSINESS_EMAIL: "sb-vr2ex53387493@business.example.com",
-    PAYPAL_SANDBOX_PERSONAL_EMAIL: "sb-430frw53401220@personal.example.com",
-    //Unabhängig von PAYPAL_SANDBOX: true = Freigabe-Prüfung läuft komplett durch, aber
+    //Testmodus: true = Stripe-Testmodus (Testkarten, siehe https://docs.stripe.com/testing),
+    //es bewegt sich nie echtes Geld - createCheckoutSession.php nutzt dann den Test Secret
+    //Key. false = echter Live-Betrieb. Vor dem Launch unbedingt auf false umstellen!
+    STRIPE_SANDBOX: true,
+    //Unabhängig von STRIPE_SANDBOX: true = Freigabe-Prüfung läuft komplett durch, aber
     //sw_update.sh wird NICHT gestartet (sicher zum Testen der Zahlungs-/Zuordnungslogik).
-    //false = bei Freigabe läuft das echte Update. So kannst du z.B. mit PAYPAL_SANDBOX=true
+    //false = bei Freigabe läuft das echte Update. So kannst du z.B. mit STRIPE_SANDBOX=true
     //(Testzahlung, kein echtes Geld) UND UPDATE_DRY_RUN=false (echtes Update ausführen)
     //gleichzeitig testen.
     UPDATE_DRY_RUN: true

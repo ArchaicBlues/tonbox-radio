@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Vergleicht die Live-Version von customers.csv auf dem Webspace mit der zuletzt
 // bekannten guten Kopie (webspace/customers_snapshot.csv). Neue Zeilen sind
-// unproblematisch (legitimes Kundenwachstum durch PayPal/claim.php) - Alarm nur,
+// unproblematisch (legitimes Kundenwachstum durch Stripe/claim.php) - Alarm nur,
 // wenn eine vorher bekannte, BEZAHLTE Zeile (gleiche MAC) verschwunden ist oder sich
 // geändert hat (z.B. paid auf 0 gesetzt, Secret ausgetauscht).
 //

@@ -2099,6 +2099,22 @@ app.get('/system', function (req, res) {
     }
 });
 
+//Button "Jetzt bezahlen (Stripe)" auf der System-Seite verlinkt hierher statt direkt auf
+//Stripe - so kann getStripeCheckoutUrl() die Checkout-URL erst per API erzeugen (siehe
+//funcsystem.js) und success_url/cancel_url auf genau diese Tonbox zurückzeigen lassen.
+app.get('/buyUpdate', async function (req, res) {
+    console.log(rememberDB + "*** Url: " + req.url)
+    const returnUrl = req.protocol + "://" + req.get('host')
+    const url = await getStripeCheckoutUrl(returnUrl)
+    if (url) {
+        procStatus.text = ""
+        res.redirect(url)
+    } else {
+        procStatus.text = "Checkout konnte nicht erstellt werden"
+        doSystem(res)
+    }
+})
+
 app.post('/system', urlencodedParser, async function (req, res) {
     console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
 

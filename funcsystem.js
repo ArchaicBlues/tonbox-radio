@@ -36,7 +36,7 @@ global.settings = {
     },
 
 global.update = "false"
-//Ergebnis der letzten checkUpdateAllowed()-Prüfung, für den PayPal-Button in system.ejs
+//Ergebnis der letzten checkUpdateAllowed()-Prüfung, für den Stripe-Button in system.ejs
 global.updateCheck = {allowed:false, message:""}
 
 //mountpoints
@@ -1022,8 +1022,6 @@ module.exports = function(required){
         //updateCheck wird NICHT hier automatisch neu geprüft - nur ein expliziter Klick
         //auf "Update Tonbox" (updateTonbox()) löst die Prüfung gegen den Webspace aus.
         //Ein einfacher Seitenaufruf zeigt also immer den Stand der letzten Prüfung.
-        var paypalActionUrl = constants.PAYPAL_SANDBOX ? "https://www.sandbox.paypal.com/cgi-bin/webscr" : "https://www.paypal.com/cgi-bin/webscr"
-        var paypalEmail = constants.PAYPAL_SANDBOX ? constants.PAYPAL_SANDBOX_BUSINESS_EMAIL : constants.PAYPAL_BUSINESS_EMAIL
         var SDData = await execCmd('df / >&1')
         let sysData = ""
         sysData += "Tonbox Software Version: " + constants.SOFTWARE_VERSION
@@ -1051,7 +1049,7 @@ module.exports = function(required){
         if (res) {
             pageInfo = "System"
             res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, usb:usbState, mac:mac, updateCheck:updateCheck,
-            paypalEmail:paypalEmail, paypalActionUrl:paypalActionUrl, updatePrice:constants.UPDATE_PRICE_EUR,
+            updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX,
             info:SDData, sys:sysData.toString(), settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
             treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, ipList:ipList})
             }
@@ -1062,7 +1060,7 @@ module.exports = function(required){
             if (res) {
                 pageInfo = "System"
                 res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:err, usb:usbState, mac:mac, updateCheck:updateCheck,
-                paypalEmail:paypalEmail, paypalActionUrl:paypalActionUrl, updatePrice:constants.UPDATE_PRICE_EUR,
+                updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX,
                 info:helpData, sys:sysData, settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
                 treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords,ipList:ipList})
             }
@@ -1182,6 +1180,37 @@ module.exports = function(required){
             return {allowed:false, message:"Checkout-Server nicht erreichbar: " + err}
         }
     },
+    //Erzeugt eine Stripe Checkout Session über createCheckoutSession.php und liefert die
+    //fertige Checkout-URL zurück, zu der /buyUpdate (server.js) dann weiterleitet. Ersetzt
+    //den früheren statischen Stripe Payment Link - der übernahm client_reference_id (zur
+    //Zuordnung der Zahlung zu dieser Tonbox) nicht zuverlässig aus dem URL-Parameter in die
+    //Session, bei API-Erstellung ist das ein regulärer, garantiert gesetzter Parameter.
+    //returnUrl = Basis-URL dieser Tonbox im lokalen Netz (für success_url/cancel_url nach
+    //der Zahlung), von server.js aus req.protocol+req.get('host') gebaut.
+    this.getStripeCheckoutUrl = async function(returnUrl){
+        try{
+            await ensureUpdateSecret()
+            const mac = await getMacAddress()
+
+            const controller = new AbortController()
+            const timeoutId = setTimeout(()=>controller.abort(), 10000)
+            try{
+                const response = await fetch("https://archaicblues.de/tonbox-media/checkout/createCheckoutSession.php", {
+                    method: "POST",
+                    headers: {"Content-Type":"application/json"},
+                    body: JSON.stringify({mac, secret: settings.updateSecret, testMode: constants.STRIPE_SANDBOX, returnUrl}),
+                    signal: controller.signal
+                })
+                const dat = await response.json()
+                return dat.url || null
+            }finally{
+                clearTimeout(timeoutId)
+            }
+        }catch(err){
+            console.log("getStripeCheckoutUrl: " + err)
+            return null
+        }
+    },
     //Für Kunden, die bereits eine andere Tonbox bezahlt haben und ein weiteres (z.B.
     //Ersatz-)Gerät kostenlos registrieren wollen: Email + Secret einer bereits bezahlten
     //Tonbox als Nachweis (vom System-Tab der alten Box). Der Webspace prüft den Nachweis
@@ -1226,7 +1255,7 @@ module.exports = function(required){
                 return
             }
             if (constants.UPDATE_DRY_RUN) {
-                //Trockenlauf (unabhängig von PAYPAL_SANDBOX): Freigabe-Prüfung läuft komplett
+                //Trockenlauf (unabhängig von STRIPE_SANDBOX): Freigabe-Prüfung läuft komplett
                 //durch, aber das echte Update wird NICHT gestartet - sonst würde jeder
                 //Zahlungs-/Freigabetest auf diesem Gerät ein reales Update auslösen.
                 procStatus.text = "[Trockenlauf] Freigabe erfolgreich, Update wird NICHT ausgeführt: " + result.message
