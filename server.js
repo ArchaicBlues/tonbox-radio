@@ -188,8 +188,18 @@ async function ipConfig() {
     try {
         if (ip_config_events === 0){
             await loadSettings()   //vor doLAN() laden, sonst sieht doLAN() nur die Defaults statt der .settings.conf-Werte
-            await doLAN(false)
+            //Retry-Timer VOR doLAN() setzen, nicht danach: wirft doLAN() unerwartet (siehe
+            //try/catch dort, das ist nur die erste Verteidigungslinie), wuerde diese ganze
+            //Funktion sonst abbrechen, BEVOR der Timer je gesetzt wird - der Start bliebe
+            //dann dauerhaft haengen (kein configureTonbox()/startWebApp() mehr), da
+            //ipConfig() ueber das einmalige setTimeout() am Dateiende nie wieder laeuft.
             ipConfigTimer = setInterval(ipConfig, 1000)
+            try{
+                await doLAN(false)
+            }catch(err){
+                console.log("ipConfig: doLAN fehlgeschlagen, Start laeuft trotzdem weiter: " + err)
+                logging("ipConfig: doLAN fehlgeschlagen, Start laeuft trotzdem weiter: " + err)
+            }
         }
         if (++ip_config_events < constants.IP_CONFIG_ELAPSED_EVENTS) {
             console.log("ping...")

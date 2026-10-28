@@ -1882,34 +1882,50 @@ module.exports = function(required){
         //     await execCmd("sudo nmcli connection up Tonbox")
         // }
 
-        // Prüfen, ob wlan0 als Hardware-Device überhaupt vorhanden ist
-        let wlanDevice = await execCmd("nmcli -t -f DEVICE,TYPE device status | grep ':wifi' >&1")
-        let wlanAvailable = !!wlanDevice
+        // Dieser ganze Block lief frueher OHNE try/catch: schlug hier irgendetwas fehl
+        // (z.B. "nmcli" selbst nicht vorhanden/anders konfiguriert), flog die Exception bis
+        // zu ipConfig() in server.js hoch, BEVOR dort der Retry-Timer gesetzt wird - der
+        // gesamte Start blieb dann dauerhaft haengen (kein startWebApp()/configureTonbox()
+        // mehr). Defense in depth: hier zusaetzlich abfangen und auf Ethernet-only
+        // zurueckfallen, nicht nur auf den "|| true" in den einzelnen Befehlen unten verlassen.
+        try{
+            // Prüfen, ob wlan0 als Hardware-Device überhaupt vorhanden ist. "|| true": grep
+            // findet auf einem frischen/unkonfigurierten Geraet nichts (kein wifi-Device bzw.
+            // noch kein "Tonbox"-Profil) und beendet sich dann mit Exit-Code 1 - ohne "|| true"
+            // wertet execCmd() das als Fehler und wirft.
+            let wlanDevice = await execCmd("nmcli -t -f DEVICE,TYPE device status | grep ':wifi' >&1 || true")
+            let wlanAvailable = !!wlanDevice
 
-        // Prüfen, ob das Tonbox-Profil existiert (unabhängig davon ob aktiv)
-        let tonboxExists = await execCmd("nmcli -t -f NAME connection show | grep -x 'Tonbox' >&1")
+            // Prüfen, ob das Tonbox-Profil existiert (unabhängig davon ob aktiv) - existiert auf
+            // jedem frisch geklonten/unkonfigurierten Geraet noch nicht, siehe Kommentar oben.
+            let tonboxExists = await execCmd("nmcli -t -f NAME connection show | grep -x 'Tonbox' >&1 || true")
 
-        if (wlanAvailable && tonboxExists) {
-            // #get rid of RadioBrowser ECONNREFUSED over wlan0 issue (force ip4)
-            let correctIP = false
-            if (settings.ip){
-                let currentIP = await execCmd("nmcli -g ipv4.addresses connection show Tonbox 2>/dev/null | tr -d '\r' >&1")
-                if (currentIP) {
-                    currentIP = currentIP.split("\n")[0]
-                    if (currentIP && currentIP.split("/")[0] === settings.ip) {
-                        correctIP = true
+            if (wlanAvailable && tonboxExists) {
+                // #get rid of RadioBrowser ECONNREFUSED over wlan0 issue (force ip4)
+                let correctIP = false
+                if (settings.ip){
+                    let currentIP = await execCmd("nmcli -g ipv4.addresses connection show Tonbox 2>/dev/null | tr -d '\r' >&1")
+                    if (currentIP) {
+                        currentIP = currentIP.split("\n")[0]
+                        if (currentIP && currentIP.split("/")[0] === settings.ip) {
+                            correctIP = true
+                        }
                     }
                 }
+                if (!correctIP){
+                    await execCmd("sudo nmcli connection modify Tonbox ipv4.dns '8.8.8.8 1.1.1.1'")
+                    await execCmd("sudo nmcli connection modify Tonbox ipv4.ignore-auto-dns yes")
+                    // down darf fehlschlagen (z.B. wenn WLAN nicht aktiv/erreichbar ist) - kein Showstopper
+                    await execCmd("sudo nmcli connection down Tonbox 2>/dev/null || true")
+                    await execCmd("sudo nmcli connection up Tonbox 2>/dev/null || true")
+                }
+            } else {
+                await logging("WLAN (Tonbox) nicht verfügbar - überspringe WLAN-Konfiguration, nutze nur Ethernet")
+                console.log("WLAN nicht verfügbar, Ethernet-only Modus")
             }
-            if (!correctIP){
-                await execCmd("sudo nmcli connection modify Tonbox ipv4.dns '8.8.8.8 1.1.1.1'")
-                await execCmd("sudo nmcli connection modify Tonbox ipv4.ignore-auto-dns yes")
-                // down darf fehlschlagen (z.B. wenn WLAN nicht aktiv/erreichbar ist) - kein Showstopper
-                await execCmd("sudo nmcli connection down Tonbox 2>/dev/null || true")
-                await execCmd("sudo nmcli connection up Tonbox 2>/dev/null || true")            }
-        } else {
-            await logging("WLAN (Tonbox) nicht verfügbar - überspringe WLAN-Konfiguration, nutze nur Ethernet")
-            console.log("WLAN nicht verfügbar, Ethernet-only Modus")
+        }catch(err){
+            console.log("doLAN wlan/Tonbox-Check fehlgeschlagen, Ethernet-only: " + err)
+            await logging("doLAN wlan/Tonbox-Check fehlgeschlagen, Ethernet-only: " + err)
         }
 
         var rebootRequired = false
