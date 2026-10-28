@@ -31,8 +31,5 @@ module.exports = function (required) {
 			indexStart: index,
 			vol: volumeAudioOut,
 		})
-	},
-	this.killProc = function (proc) {
-		return Promise.resolve("ok")
 	}
 }

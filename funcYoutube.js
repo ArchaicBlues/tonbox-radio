@@ -1,9 +1,3 @@
-//DUMMY MODULE: YouTube search/download (Mediathek) has been reduced to a
-//no-op stub as part of the BASIS build. Routes stay reachable and render the
-//same pages, but no YouTube API calls or yt-dlp downloads happen anymore.
-//The pure filename-sanitizing helpers below are kept real because
-//funcRadio.js (a kept CORE feature) calls them when naming recordings.
-
 require('./funcsystem')();
 
 global.ytTitle = []
@@ -18,25 +12,6 @@ module.exports = function (required) {
   },
   this.checkYoutubeKey = async function (k) {
     return false
-  },
-  this.escapeFilename = function (name) {
-    return Promise.resolve(
-      name.replace(/ /g, String.fromCharCode(92, 32))
-        .replace(/'/g, String.fromCharCode(92, 39))
-        .replace(/\(/g, String.fromCharCode(92, 40))
-        .replace(/\)/g, String.fromCharCode(92, 41))
-    )
-  },
-  this.cleanFilename = function (name, data) {
-    return new Promise((resolve) => {
-      var txt = ""
-      if (name) {
-        txt = data.replace(name, "");
-      } else txt = data
-
-      txt = txt.replace(/[^a-zA-Z0-9\.\-]/g, "")
-      resolve(txt)
-    })
   },
   this.cleanFilenameNoPromise = async function (name, data) {
     var txt = ""
@@ -65,9 +40,6 @@ module.exports = function (required) {
     txt = txt.replace(/\*/g, "")
     txt = txt.replace(/^-|-$/g, "") //remove - at beginning and end of filename
     return txt
-  },
-  this.saveMp3 = async function (mp3Name) {
-    return ""
   },
   this.downloadYTconvertMp3 = async function (url, index, em, save) {
     procStatus.text = "Feature disabled in this BASIS build"

@@ -15,9 +15,6 @@ module.exports = function () {
   this.endSlideShow = function () {
     //no-op (kept as a harmless callable used by generic navigation cleanup)
   },
-  this.checkVideoPic = async function (item) {
-    return "pic"
-  },
   this.renamePicDir = async function (path, newName, res) {
     if (res) showPicDir(res)
   },
@@ -26,9 +23,6 @@ module.exports = function () {
   },
   this.createPicDir = async function (res, newDir) {
     if (res) showPicDir(res)
-  },
-  this.renderNewDir = function (res, dir) {
-    res.render('pages/picDir', { pageInfo: pageInfo, vol: volumeAudioOut, settings: settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, data: "", dir: dir, bigpath: "" })
   },
   this.showPicSubDir = async function (res, dir, bigpath) {
     res.render('pages/picDir', { pageInfo: pageInfo, vol: volumeAudioOut, settings: settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, data: "", dir: dir, bigpath: "" })
@@ -42,29 +36,11 @@ module.exports = function () {
   this.renamePicVidDir = async function (path, newName, res) {
     if (res) showPicSubDir(res, path, "")
   },
-  this.checkEmptyPicVidDir = async function (path, dir, res) {
-    if (res) showPicSubDir(res, dir, "")
-  },
-  this.checkEmptyDir = async function (dat, dir, res) {
-    if (res) showPicSubDir(res, dir, "")
-  },
-  this.cleanVideoExt = async function (src, dir) {
-    return "ok"
-  },
   this.convertVideo = async function (res, dir, src) {
     procStatus.text = "Feature disabled in this BASIS build"
     if (res) showPicDir(res)
   },
-  this.checkFileout = async function (filein, fileout) {
-    return ""
-  },
   this.rotateSlide = async function (p, res) {
     if (res) res.render('pages/picDir', { pageInfo: pageInfo, vol: volumeAudioOut, settings: settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, data: [], dir: rememberSubDir, bigpath: "" })
-  },
-  this.getPicData = async function (i, dir) {
-    //no-op
-  },
-  this.clearSmallPics = function () {
-    //no-op
   }
 }

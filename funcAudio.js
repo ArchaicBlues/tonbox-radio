@@ -101,20 +101,8 @@ module.exports = function (required) {
       });
     }
   },
-  this.sendCaptureStatus = async function (res) {
-    if (res) res.render('pages/audioCapture', { pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "", audioInfo: progressInfo, discogs: discogsResult, pside: recAD.side, userSave: adjustRenameState.userCheck, getPara: false, vol: settings.jackVolume, settings: settings })
-  },
-  this.startConversion = function () {
-    //no-op
-  },
   this.getAudioCaptureSize = function () {
     return ""
-  },
-  this.getAllSize = async function () {
-    //no-op
-  },
-  this.stopAudioRecording = function () {
-    //no-op
   },
   this.stopADconversion = async function () {
     SSEIntervalTyp = constants.SSE_NONE_CLEAR_INTERVAL
@@ -135,35 +123,8 @@ module.exports = function (required) {
       })
     }
   },
-  this.audioMP3Capture = function () {
-    //no-op
-  },
-  this.setAudioCaptureInfo = async function (txt) {
-    progressInfo = String(txt || "")
-  },
-  this.resetAD = function () {
-    //no-op
-  },
   this.wav2mp3 = function (res) {
     if (res) res.render('pages/showADrecords', { pageInfo: pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: [], dir: 0, baseimages: [], settings: settings, indexStart: 0, vol: volumeAudioOut })
-  },
-  this.checkVolume = function (dat) {
-    //no-op
-  },
-  this.adjustTrackVolume = async function (filename) {
-    //no-op
-  },
-  this.renameVinylTrack = async function (increment) {
-    //no-op
-  },
-  this.renameCDtracks = async function (increment) {
-    //no-op
-  },
-  this.adjustVolume = function (filename) {
-    //no-op
-  },
-  this.getffmpeg = function (dat, find) {
-    return ""
   },
   this.audioGetProcessWavState = function () {
     //no-op
@@ -182,9 +143,6 @@ module.exports = function (required) {
   },
   this.checkVinylRecExist = async function () {
     return false
-  },
-  this.getRecordTime = async function (res) {
-    if (res) res.render('pages/audioCapture', { pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, getPara: false, vol: settings.jackVolume, settings: settings })
   },
   this.resetMP3select = function () {
     mp3Select.in = ""
@@ -214,28 +172,11 @@ module.exports = function (required) {
     }
     return false
   },
-  this.getAudioCaptureInfo = function () {
-    return progressInfo
-  },
-  this.checkAllWav = async function (res) {
-    if (res) {
-      res.render('pages/audioCapture', {
-        pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez,
-        recording: getScheduledJobsWithoutTimeout(),
-        pState: procStatus, audioInfo: "none",
-        discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck,
-        getPara: true, vol: volumeAudioOut, settings: settings
-      })
-    }
-  },
   this.checkAudioAC3 = function (p) {
     //no-op
   },
   this.convertAC3 = async function (uri) {
     //no-op: video conversion disabled in this BASIS build
-  },
-  this.convertMP4A = async function (uri) {
-    //no-op
   },
   this.createEqSliderJson = async function () {
     await execCmd("rm -f eqSlider.json")
@@ -408,23 +349,6 @@ module.exports = function (required) {
   this.getMonitorLevel = function () {
     return "0"
   },
-  this.stopMonitorLevel = function (res, page) {
-    SSEIntervalTyp = constants.SSE_INACTIVE
-    if (page && page.match("audioCaptureTape")) {
-      if (res) doTape(res, false)
-    } else {
-      if (res) res.render('pages/audioCapture', {
-        pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez,
-        recording: getScheduledJobsWithoutTimeout(),
-        pState: procStatus, audioInfo: progressInfo,
-        discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck,
-        getPara: true, vol: volumeAudioOut, settings: settings
-      })
-    }
-  },
-  this.stopML = function () {
-    SSEIntervalTyp = constants.SSE_NONE_CLEAR_INTERVAL
-  },
   this.stopMusicPlay = async function (proc) {
     await killMplayer()
     stopMetadata()
@@ -449,21 +373,6 @@ module.exports = function (required) {
         exec("sudo killall pw-play", (err, stdout, stderr) => { })
       }
     })
-  },
-  this.deepSplit = async function () {
-    return false
-  },
-  this.getGramoTracks = async function () {
-    return false
-  },
-  this.generateNewTrackBlocks = async function () {
-    //no-op
-  },
-  this.getTstr = function (block) {
-    return ""
-  },
-  this.workOnTracks = async function () {
-    //no-op
   },
   this.generateCoverImg = async function (del) {
     //no-op: Vinyl cover thumbnail generation disabled in this BASIS build
@@ -579,21 +488,6 @@ module.exports = function (required) {
   this.doVideo = async function (res, rec, videoTitle) {
     if (res) res.render('pages/captureVideo', { pageInfo: pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus })
   },
-  this.startVideoRecording = function (recordFile) {
-    //no-op
-  },
-  this.calcRecEnd = async function (time) {
-    return ""
-  },
-  this.audioTapeExist = async function (inf) {
-    return false
-  },
-  this.audioTapeAnalyze = async function (res) {
-    if (res) return doTape(res, false)
-  },
-  this.audioTapeRecord = async function (res) {
-    if (res) return doTape(res, false)
-  },
   this.Mp4Mp3 = async function (title, res) {
     rememberDB = "Video"
     trackIndex = -1
@@ -603,27 +497,6 @@ module.exports = function (required) {
   this.Mp4Delete = async function (track, res) {
     procStatus.text = "Feature disabled in this BASIS build"
     if (res) showMusicDir("Video", res)
-  },
-  this.checkGramoTracks = async function () {
-    return false
-  },
-  this.checkContinuesSilence = async function (th) {
-    //no-op
-  },
-  this.startLautheit = function () {
-    //no-op
-  },
-  this.stopLautheit = function (msg) {
-    //no-op
-  },
-  this.watchLautheit = function () {
-    //no-op
-  },
-  this.checkSpikes = async function () {
-    return 0
-  },
-  this.cutSilenceEnd = async function (f) {
-    //no-op
   },
   this.startPowerUpAudio = async function () {
     if (settings.mediaOut === "HTTP live streaming")

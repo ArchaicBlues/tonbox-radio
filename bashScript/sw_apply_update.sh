@@ -53,10 +53,6 @@ fi
 
 echo "Program / Lib installation..."
 
-# youtube download immer neu initialisieren, da youtube öfters Änderungen vornimmt
-sudo wget -O /usr/local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
-sudo chmod a+rx /usr/local/bin/yt-dlp
-
 if node -e "require.resolve('icy')" 2>/dev/null; then
     echo "icy ist installiert"
 else

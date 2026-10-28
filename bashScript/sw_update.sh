@@ -52,15 +52,6 @@ tar -xf "$ARCHIVE" -C "$WORKDIR"
 
 echo "Files extracted to $WORKDIR"
 
-#bei der Übertragung wird das ausführbare Dateienattribut gelöscht, deswegen:
-#chmod +x bashScript/*.sh
-#chmod +x gramocli
-#chmod +x songrec
-#lösche u.U. alte Daten
-#rm -f views/*OLD*; rm -f views/*copy*;
-#rm -f views/*HTTP*; rm -f views/*.txt; rm -f views/*.log
-
-
 #
 # APPLY STARTEN
 #

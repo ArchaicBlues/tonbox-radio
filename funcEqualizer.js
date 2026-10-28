@@ -154,34 +154,6 @@ module.exports = async function(required){
       console.log(err)
     }    
   },
-  this.showPage = function(b, res){
-    console.log(b)
-    if (b.match("Audio")){
-      showMusicDir(rememberDB, res)
-      return
-    }
-    else if(b.match("Favorites")) {
-      loadRadioHistory(res)
-      return
-    }
-    else if (b.match("Radio")){
-      res.render('pages/radioStation', {pageInfo:pageInfo,
-            dat: stationCount, search:radioUserSearch, rd:radioFound,
-            btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-            pState: procStatus, rec: getRadioRec(),
-            settings:settings,
-            vol: volumeAudioOut,
-            settings:settings,
-            play: radioPlayIndex,
-      });
-      return
-    }
-    else if (b.match("Vinyl")) {
-      showMusicAD(res, "")
-      return
-    }
-    else setInitialPage(res)
-  },
   this.setReverb = async function(body, res){
     trackIndex-- //see pw-play trackState = "done", (die gleiche Musik nochmal)
     try{

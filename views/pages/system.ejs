@@ -145,21 +145,10 @@
         box-shadow: 0 5px 15px rgba(0,255,255,0.4);
     }
 
-/*************API Keys**************/
-.card { max-width:600px; margin:auto; background:#1e1e1e; padding:30px; border-radius:8px; }
 h2 { margin-top:0; }
 label { display:block; margin-top:20px; }
 input { width:100%; padding:8px; margin-top:5px; border-radius:4px; border:none; }
 button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cursor:pointer; }
-.primary { background:#4CAF50; color:white; }
-.test { background:#2196F3; color:white; margin-left:10px; }
-.notice { font-size:0.9em; color:#bbb; margin-top:10px; }
-.success { color:#4CAF50; margin-top:15px; }
-.error { color:#f44336; margin-top:15px; }
-.small-text {
-  font-size: 10px;     /* kleiner */
-  font-weight: normal; /* kein bold */
-}
 
 .tv-results {
     margin-top: 12px;
@@ -353,47 +342,8 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
         <hr style="border-color:rgb(236, 6, 6)"><br>
         <br>
         </form>
-        
+
 <form action='../system', method='POST', content-type="text/javascript">
-<div class="audio-system-card">
-    <h2>External Services</h2>
-
-    <p class="notice">
-        Für die Nutzung einer vollständigen You-Tube-Suche oder Download von Platten-Cover für Platten-Digitalisierung sind kostenlose, eigene API-Schlüssel erforderlich.
-    </p>
-    <label>
-        YouTube Data API Key
-        <input type="text" id="youtubeKey" name="youtubeKey" placeholder="AIza...">
-    </label>
-    <ol class="small-text">
-        <li>Gehe zu <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a>  und melde dich mit deinem Google-Konto an. Wenn du noch kein Konto hast, erstelle eines.</li>
-        <li>Klicke auf das Projektmenü oben rechts und wähle „Neues Projekt erstellen“. Gib beliebigen Projekt Namen ein, erstelle es.</li>
-        <li>Navigiere im Menü zu „APIs & Services“. Suche nach „YouTube Data API v3“, klick auf „Aktivieren“</li>
-        <li>Dann „APIs & Services“ > „Zugangsdaten“. Klicke auf „Zugangsdaten erstellen“ und wähle „API-Schlüssel“ aus. Ein neuer Schlüssel wird generiert.</li>
-        <li>Kopiere den generierten API-Schlüssel hier: (wird nur einmal angezeigt)</li>
-    </ol>
-
-    <label>
-        Discogs Consumer Token
-        <input type="text" id="discogsUserToken" name="discogsUserToken" placeholder="Discogs Token...">
-    </label>
-    <ol class="small-text">
-        <li>Registriere auf <a href="https://www.discogs.com" target="_blank">discogs.com</a></li>
-        <li>Selektiere Settings</li>
-        <li>In der linken Sidebar, klick "Developers"</li>
-        <li>Click "Generate new token button"</li>
-        <li>Kopiere den generierten API-Schlüssel hier: (wird nur einmal angezeigt)</li>
-        <li>Halte den Token Schlüssel privat.</li>
-    </ol>
-
-
-
-    <button type="button" class="wifi-btn" id="saveApiKeysBtn">Save</button>
-    <!-- <button type="button" class="test" onclick="testKeys()">API-Test</button> -->
-
-    <div id="status"></div>
-
-    </div>
     <br><br>
         <hr style="border-color:rgb(236, 6, 6)"><br>
             <h4>Wi-Fi Configuration</h4>
@@ -533,60 +483,6 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
 
     </script>
 <script>
-// Save button click handler – sends only the API keys
-document.getElementById("saveApiKeysBtn").addEventListener("click", async function() {
-    const youtubeKey = document.getElementById("youtubeKey").value.trim();
-    const discogsToken = document.getElementById("discogsUserToken").value.trim();
-
-    // if (!youtubeKey || !discogsKey) {
-    //     showStatus("Bitte alle Pflichtfelder ausfüllen.", false);
-    //     return;
-    // }
-
-    try {
-        const response = await fetch("/apiKeySet", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                youtubeKey: youtubeKey,
-                discogsUserToken: discogsToken
-                // If you later uncomment songrecHost, add it here
-            })
-        });
-        
-        if (response.ok) {
-            // Optionally read the response body (if your server sends JSON back)
-            const data = await response.json();
-            console.log("Server response:", data);
-            showStatus("youtube Key = "+data.youtubeKey+" / discogs User Token = "+data.discogsUserToken)
-        } else {
-            // Try to get error message from response
-            let errorMsg = "Fehler beim Speichern. (Status: " + response.status + ")";
-            try {
-                const errorData = await response.json();
-                if (errorData.message) errorMsg += " - " + errorData.message;
-            } catch (e) {
-                // Ignore if response is not JSON
-            }
-            showStatus(errorMsg, false);
-        }
-    } catch (err) {
-        showStatus("Fehler beim Speichern: " + err.message, false);
-    }
-});
-
-// Status helper (reused from your original code)
-function showStatus(message, success) {
-    const status = document.getElementById("status");
-    status.className = success ? "success" : "error";
-    let msg = message.split("/")
-    let inf1="YouTube Key ok, confirmed and saved"
-    let inf2 ="Discogs User Token ok, confirmed and saved"
-    if (msg[0].match("nok")) inf1=" no valid YouTube Key - not saved !"
-    if (msg[1].match("nok")) inf2=" not valid Discogs User Token - not saved !"
-    status.innerText = inf1+"\n"+inf2;
-}
-
 function togglePassword() {
     const passInput = document.getElementById("pass");
     if (passInput.type === "password") {

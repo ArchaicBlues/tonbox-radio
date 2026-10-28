@@ -57,8 +57,6 @@ let constants = {
     DEEP_SPLIT_MIN_DISTANCE_TIME: 80,
     DEEP_SPLIT_MAX_DISTANCE_TIME: 200,
     //--------------------------------
-    LINKS_MAX: 10,
-    //--------------------------------
     MAX_PIC_SUBDIRS: 4,
     //--------------------------------
     USB_NOK: "nok", 

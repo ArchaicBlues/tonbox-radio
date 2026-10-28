@@ -297,27 +297,6 @@ const MS_TIME_600000 = 600000 //every hour
 const timeoutObj = 0//setInterval(autoLogout,MS_TIME_60000);todo
 
 
-//sw update check********************************************
-app.get("/api/version", (req, res) => {
-    console.log("version check")
-    try {
-        const version = fs.readFileSync(
-            "/home/pi/ArchaicNodeEJS/current/VERSION",
-            "utf8"
-        );
-
-        res.json({
-            status: "ok",
-            version: version.trim()
-        });
-
-    } catch (e) {
-        res.json({
-            status: "error",
-            version: "unknown"
-        });
-    }
-});
 
 /***********************************************    */
 
@@ -1643,7 +1622,6 @@ app.post('/youtubeselect', urlencodedParser, function (req, res) {
 app.post('/dlProgress', urlencodedParser, function (req, res) {
     console.log("rememberDB="+rememberDB + " " + req.url + ", body:" + JSON.stringify(req.body))
     if (!req.body || req.body.Back) {
-        killProc("yt-dlp")
         SSEIntervalTyp = constants.SSE_NONE_CLEAR_INTERVAL
         removePart()
         rememberDB="Video"
@@ -2075,17 +2053,6 @@ app.post('/slideButton', urlencodedParser, function (req, res) {
 
 
 
-app.post('/videoShow', urlencodedParser, function (req, res) {
-    console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
-
-    if (!req.body || req.body.Back) {
-        setInitialPage(res)
-        return
-    }
-    var uri = req.body.slideShow //??
-    showVideo(res, uri)
-})
-
 
 app.get('/system', function (req, res) {
     console.log("rememberDB="+rememberDB + " " + req.url + ", body:" + JSON.stringify(req.body))
@@ -2237,11 +2204,6 @@ app.post('/system', urlencodedParser, async function (req, res) {
 app.post('/systemSettings', urlencodedParser, function (req, res) {
     console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
     configSettings(res, req.body)
-})
-
-app.post('/apiKeySet', urlencodedParser, function (req, res) {
-    console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
-    validateAPI(req.body.youtubeKey, req.body.discogsUserToken, res)
 })
 
 app.get('/howto', function (req, res) {
@@ -2408,12 +2370,6 @@ app.use(function (req, res, next) {
 })
 
 
-app.get("/views/bootstrap.min.css", function routeHandler(req, res) {
-    //console.log("app-get:", `${req.method} ${req.url}`)
-    var p = __dirname + req.url
-    console.log("read " + p)
-    sendHLS(res, p)
-});
 
 
 
@@ -2483,13 +2439,6 @@ app.get("/scripts/cdControls.js", function routeHandler(req, res) {
 app.get("/update", function routeHandler(req, res) {
     //console.log("app-get:", `${req.method} ${req.url}=`+update)
     res.writeHead(200, { 'Access-Control-Allow-Origin': '*'});
-    res.end(update, 'utf-8');
-    return
-})
-app.get("/resetUpdate", function routeHandler(req, res) {
-    //console.log("app-get:", `${req.method} ${req.url}=`+update)
-    res.writeHead(200, { 'Access-Control-Allow-Origin': '*'});
-    update = "false"
     res.end(update, 'utf-8');
     return
 })

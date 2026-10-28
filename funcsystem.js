@@ -373,32 +373,6 @@ function setMedia(status,mountpoint){
     }
 }
 
-function checkAll(){
-    if (devADrecords != constants.USB_NOK){ 
-        var media = ""
-        if (devADrecords.match("usbmedium1")) media ="usbmedium1"  
-            else if (devADrecords.match("usbmedium2")) media ="usbmedium2"  
-                else if (devADrecords.match("usbmedium3")) media ="usbmedium3"  
-        if (devADrecords.match(media+"/mediaServer") && 
-            devMusic.match(media+"/mediaServer") && 
-            devHome.match(media+"/mediaServer")){
-            console.log("all Tonboxdirs on one USB storage device detected")
-            //hat Priorität!
-            usbState.usbmedium1=constants.USB_NOK
-            usbState.usbmedium2=constants.USB_NOK
-            usbState.usbmedium3=constants.USB_NOK
-            usbState.usbmedium1MP=devADrecords
-            usbState.usbmedium2MP=devMusic
-            usbState.usbmedium3MP=devHome
-            if (media === "usbmedium1") usbState.usbmedium1 = constants.USB_OK
-            else if (media === "usbmedium2") usbState.usbmedium2 = constants.USB_OK
-            else if (media === "usbmedium3") usbState.usbmedium3 = constants.USB_OK
-            return true
-        }
-    } else
-        return false
-}
-
 const checkDev = async (res) => {
     var i=0, dev = "";
     try{
@@ -862,9 +836,6 @@ module.exports = function(required){
             })
         }
         readTree(res)
-    },
-    this.getStorage = function (res){
-
     },
     this.storageEvaluation = async function(){
         try{
@@ -1512,13 +1483,6 @@ module.exports = function(required){
             console.log("checkSD:"+err)
         }
     }
-    this.resetUSB = function (res,err){
-        procStatus.text="usbmedium unmounted"
-        console.log(procStatus.text)
-        initStorage()
-        allDev = []
-        setInitPage(res);//this.doSystem(res)
-    },
     this.rebootSystem = function(){
         console.log("reboot system...")
         exec('sudo reboot', (error, stdout, stderr) => {})
@@ -1670,39 +1634,6 @@ module.exports = function(required){
             sse.write(sseData)
             return
         }
-    },
-	this.setHomeLink = function(res,url,name){
-        if (webLinks.length < constants.LINKS_MAX){
-            if(url && name){
-                let n = {url:url, name:name}
-                webLinks.push(n)
-                var data = JSON.stringify(webLinks)
-                fs.writeFile('help/linkJSON.txt', data, function (err) {
-                    if (err) {
-                        console.error("linkJSON.txt, " + err)
-                    }else{
-                        console.error("wrote linkJSON.txt")
-                    }
-                })        
-            }
-        } else procStatus.text = "Max. " + constants.LINKS_MAX + " Links possible"
-        res.render('pages/entryLinks', {settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, weblinks:webLinks, webshow:-1})
-    },
-    this.removeHomeLink = function(res,index){
-        //reject array allocation
-        let a = []
-        var i=0; for (i in webLinks){
-            if (i != index){
-                a.push(webLinks[i])
-            }
-        }
-        webLinks = a
-        var data = JSON.stringify(webLinks)
-        fs.writeFile('help/linkJSON.txt', data, function (err) {
-            res.render('pages/entryLinks', {settings:settings, btDevice:bluez, 
-                recording:getScheduledJobsWithoutTimeout(), pState:procStatus, 
-                weblinks:webLinks, webshow:-1})
-        })
     },
     this.createUSB = async function (what,res){
         console.log(what) //1 c All       2 m Music
@@ -2084,9 +2015,6 @@ module.exports = function(required){
         }
     },
 
-    this.cleanSystem = function(){
-        exec("bleachbit --clean system.cache; rm -rf .Trash-1000/; sudo journalctl --vacuum-time=1s", (error, stdout, stderr) => {})
-    },
     this.availableSpace = function (dev,bytes){
         var free = ""
         if (dev.match("Music"))
@@ -2213,13 +2141,7 @@ module.exports = function(required){
     },
     this.doSettings = async function (res, set){
         try{
-            if(set.match("apikey"))
-            {
-                res.render('pages/apiKeySet',{pageInfo:pageInfo,resultTV:resultTV,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings});
-            }else{
-                //await getIP()
-                res.render('pages/systemSettings',{pageInfo:pageInfo,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings});
-            }
+            res.render('pages/systemSettings',{pageInfo:pageInfo,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings});
         }
         catch (err){
             res.render('pages/systemSettings',{pageInfo:pageInfo,resultTV:resultTV,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings});
@@ -2417,26 +2339,6 @@ module.exports = function(required){
                 throw err; // anderer Fehler
             }
         }
-    },
-    this.validateAPI = async function (ytKey,discToken,res){
-        let yt="nok", disc="nok"
-        if (ytKey.length > 30){
-            if (await checkYoutubeKey(ytKey)) {
-                yt="ok!"
-                settings.youtubeKey = ytKey
-                setYouTubeObj()
-            }
-        }
-        if (discToken.length > 30){
-            if (await checkDiscogsToken(discToken)) {
-                disc="ok!"
-                settings.discogsUserToken = discToken
-            }
-        }
-        if (yt=="ok!" || disc=="ok!") {
-          await writeSettings()
-        }
-        res.json({ youtubeKey: yt, discogsUserToken: disc });
     },
     //DUMMY: myUSB browsing disabled in this BASIS build. This only checks
     //(read-only, shallow) whether the USB medium has any audio files at all,

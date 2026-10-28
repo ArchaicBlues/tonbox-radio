@@ -24,12 +24,6 @@ module.exports = function (required) {
   this.cdDvd = async function (action, tr, res) {
     if (res) return res.json({ success: false, error: "Feature disabled in this BASIS build" });
   },
-  this.startCDPlay = function (track, blkCDdev, res) {
-    if (res) return res.json({ success: false, currentTrack: 0 });
-  },
-  this.mplayerPlay = async function (track, blkCDdev, res, filePath = "") {
-    if (res) return res.json({ success: false, currentTrack: 0 });
-  },
   this.killMplayer = async function () {
     //no-op
   },
@@ -48,9 +42,6 @@ module.exports = function (required) {
         usbAudioCaptureDetected: false
       });
     }
-  },
-  this.checkCDRipping = async function () {
-    return ""
   },
   this.captureCD = async function (res) {
     procStatus.text = "Feature disabled in this BASIS build"
@@ -80,17 +71,6 @@ module.exports = function (required) {
   },
   this.saveUserInfoCD = async function (res, cdNum, artist, title, tracks, images) {
     if (res) return captureCD(res);
-  },
-  this.generateImage = async function (b, h, title) {
-    //no-op
-  },
-  this.detectDisc = async function (dev) {
-    return {
-      type: "Unknown",
-      filesystem: null,
-      files: {},
-      tracks: 0
-    }
   },
   this.moveCDAudiodata = async function (res) {
     if (res) return res.json({ status: "disabled" });

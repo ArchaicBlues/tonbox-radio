@@ -52,62 +52,6 @@ global.intervalRadio = null
 
 /****************************** */
 /****************************** */
-function formatDate(ts) {
-    const d = new Date(ts);
-    const day = String(d.getDate()).padStart(2, "0");
-    const month = String(d.getMonth() + 1).padStart(2, "0"); // months 0-11
-    const year = d.getFullYear();
-    const hours = String(d.getHours()).padStart(2, "0");
-    const minutes = String(d.getMinutes()).padStart(2, "0");
-
-    return `${day}.${month}.${year}_${hours}:${minutes}`;
-}
-
-function classifyUrl(url) {
-  const u = url.toLowerCase();
-
-  // Browser-required
-  if (
-    u.includes("rndfnk.com") ||
-    u.includes("ard.de") ||
-    u.includes("swr.de") ||
-    u.includes("dispatcher.")// ||
-//    /(token|sid|cid|tvf)=/.test(u)
-  ) {
-    return "chromium";
-  }
-
-  // Direct streams
-  if (
-    /\.(mp3|aac|ogg|pls|m3u)(\?|$)/.test(u) ||
-    /:\d+\//.test(u)
-  ) {
-    return "mpv";
-  }
-
-  // Unknown → try mpv first
-  return "try";
-}
-
-async function isValidCandidate(url) {
-  if (!url || typeof url !== "string") 
-    return false;
-  if (url.match("live365") || url.match("accuradio") || url.match("tuneIn")) {
-    // if (url.match("mp3"))
-    //   console.log("found mp3")
-    if (url.match("mp3") || url.match("ogg") || url.match("acc"))
-      return true; 
-    return false; //else API required
-  }
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-
 // function isLikelyStream(url) {
 //   return (
 //     // file-based streams
@@ -648,26 +592,6 @@ module.exports = function(){
       return false;
     }
   },
-  this.resolvePls = function(plsUrl, callback) {
-    const client = plsUrl.startsWith('https') ? https : http;
-    client.get(plsUrl, (res) => {
-        let data = '';
-
-        res.on('data', chunk => data += chunk);
-
-        res.on('end', () => {
-            const match = data.match(/File1=(.*)/);
-            if (match) {
-                callback(match[1].trim());
-            } else {
-                console.log("No stream URL found in PLS");
-            }
-        });
-
-    }).on('error', err => {
-        console.error("PLS fetch error:", err.message);
-    });
-  },
   this.getMetadata = async function(){
     try {
       const content = await execCmd("cat help/metadata.txt >&1");
@@ -922,59 +846,6 @@ module.exports = function(){
     track=track.replace(/;/g,String.fromCharCode(92,59) ) //"\;"
     return track
   },
-  this.dirCheck = function(dir){
-    if (dir.match("Radio/")) return true;
-    if (dir.match("Audio/")) return true;
-    if (dir.match("Video/")) return true;
-    return false
-
-    if (((dir).search(/Radio/) >=0) && 
-    ((dir).search(".mp3") < 0 )  &&  
-    ((dir).search(".MP3") < 0 )  &&  
-    ((dir).search(".ogg") < 0 )  &&  
-    ((dir).search(".OGG") < 0 )  &&  
-    ((dir).search(".WAV") < 0 )  &&  
-    ((dir).search(".wav") < 0 )){
-        if (dir.length > 6) return 0 //radio subdir
-        return 1 //radio base dir, needed for correct "back" command
-    }
-    if (((dir).search(/Audio/) >=0) && 
-    ((dir).search(".mp3") < 0 )  &&  
-    ((dir).search(".MP3") < 0 )  &&  
-    ((dir).search(".ogg") < 0 )  &&  
-    ((dir).search(".OGG") < 0 )  &&  
-    ((dir).search(".WAV") < 0 )  &&  
-    ((dir).search(".wav") < 0 )){
-      if (dir.length > 6) return 0 //audio subdir
-      return 1 //audio base dir, needed for correct "back" command
-    }
-    if (((dir).search(/Video/) >=0) && 
-    ((dir).search(".mp4") < 0 )  &&  
-    ((dir).search(".MP4") < 0 )){
-      if (dir.length > 6) return 1 
-      return 0 //audio base dir, needed for correct "back" command
-    }
-  },
-  this.nextMusicTrack = function(){
-    //der nächste trackIndex muss bereits gesetzt sein
-    //check ob innerhalb allTracks[] beendet / ob ein Verzeichnis / ob Musikdatei
-    if (trackIndex >= (allTracks.length)) 
-        trackIndex = 1 //start at the beginning of allTracks[]
-    if (!dirCheck(devMusic+"/"+rememberDB+"/"+allTracks[trackIndex]))
-      return true //aktuell ok
-    //aktuell ist ein Verzeichnis vorhanden, jetzt können mehrere Verzeichnisse hintereinander liegen
-    for (i=trackIndex;i<=allTracks.length;i++){        
-      if (!dirCheck(devMusic+"/"+rememberDB+"/"+allTracks[i])){
-        //Verzeichnisse können nicht übersprungen werden in showMusicWorld.ejs
-        //Verzeichnisse sollten daher am Ende von allTracks[] plaziert werden. 
-        //Bei der Implementierung von Verzeichnissen, diese mit letzem Alphabet Buchstaben beginnen (z.B XJazz90_1WGMC-FM")
-        trackIndex = 1
-        return true
-      }
-    }
-    trackIndex = 1
-    return false //nur Verzeichnisse vorhanden!
-  },
   this.showResultAgain = function (res){
     res.render('pages/radioStation', {pageInfo:pageInfo,dat:stationCount, search:radioUserSearch,  
       rd:radioFound, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), 
@@ -996,12 +867,6 @@ module.exports = function(){
       console.log(err)
     }
   },
-  this.stopPlayActions = function (){
-    if (trackIntervalObj){
-      stopMusicPlay(constants.AUDIO_ALL)
-      clearTrackInterval()
-    }
-  },
   this.setRecSide = function(){
     var i = 0
     for (i in recSide){
@@ -1010,19 +875,6 @@ module.exports = function(){
         recSide[0] = recAD.side
         break
       }
-    }
-  },
-  this.convertVideoM4A = async function(p){
-    n = p.split(".m4a")
-    var cmd = "ffmpeg -i " + p + " -c:av copy -f mp4 " + n[0] + ".mp4"
-    try{
-      await execCmd(cmd)
-      await execCmd("rm " + p)
-      await sendHLS(res, n[0] + ".mp4") 
-
-    }
-    catch(err){
-      console.log(err)
     }
   },
   this.setInitialPage = async function(res){
