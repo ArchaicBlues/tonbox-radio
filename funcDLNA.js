@@ -1048,8 +1048,17 @@ function soapRequest(controlURL, serviceType, action, body, timeout = 5000) {
 }
 
 
+//Liefert die aktuelle LAN-IP dieser Tonbox (eth0 bevorzugt, sonst wlan0), frisch ermittelt -
+//ipList wird nur in wenigen anderen Fluessen aktualisiert, koennte beim DLNA-Casting also
+//veraltet/leer sein. NICHT hartcodieren (war vorher 192.168.2.140, die IP eines einzelnen
+//Entwicklungsgeraets - haette bei jedem Kunden mit anderer IP "Cast to TV" stumm kaputt gemacht).
+async function getTonboxIP() {
+    await getIP()
+    return ipList[1] || ipList[2] || ""
+}
+
 async function playViaDLNA(tv, filename) {
-    const mediaURL = `http://192.168.2.140:8000/mediaShow/${encodeURIComponent(filename)}`;
+    const mediaURL = `http://${await getTonboxIP()}:8000/mediaShow/${encodeURIComponent(filename)}`;
     console.log("playViaDLNA: ",filename);
     /*
      * ---------------------------------------------------------
@@ -1210,7 +1219,7 @@ async function nextDLNA(tv) {
 
 async function setAVTransportURI(filename){
     const mediaURL =
-        `http://192.168.2.140:8000/mediaShow/${encodeURIComponent(filename)}`;
+        `http://${await getTonboxIP()}:8000/mediaShow/${encodeURIComponent(filename)}`;
 
     try {
         await soapRequest(
@@ -1243,7 +1252,7 @@ async function setAVTransportURI(filename){
 
 
 async function setNextAVTransportURI(tv, filename) {
-    const mediaURL = `http://192.168.2.140:8000/mediaShow/${encodeURIComponent(filename)}`;
+    const mediaURL = `http://${await getTonboxIP()}:8000/mediaShow/${encodeURIComponent(filename)}`;
 
     console.log("DLNA: SetNextAVTransportURI");
     console.log("DLNA Next URL:", mediaURL);
