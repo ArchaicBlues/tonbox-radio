@@ -446,7 +446,7 @@ const mountCheck = async (mp,dev,media) => {
         return result 
     }
     catch(msg){
-        console.log(err)
+        console.log(msg)
         if (msg.match("not empty"))
             console.log(mp+" could be myUSB !")
         return msg

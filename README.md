@@ -20,6 +20,17 @@ are present in the UI but intentionally disabled as no-ops, marked with
 
 - Raspberry Pi (tested on Raspberry Pi OS / Debian 12 "bookworm", `aarch64`)
 - Node.js (tested with v21; install via [nvm](https://github.com/nvm-sh/nvm) is recommended)
+- Passwordless `sudo` for your user (the app runs many `sudo` commands - mount,
+  network config, systemctl, reboot, ...). This is already the default on stock
+  Raspberry Pi OS for the `pi` user (`/etc/sudoers.d/010_pi-nopasswd`). On any
+  other base image, set it up once before the first start, otherwise the app
+  will hang waiting for a password prompt that never comes (especially once
+  running unattended as a systemd service after a reboot):
+  ```
+  echo "pi ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_pi-nopasswd
+  sudo chmod 440 /etc/sudoers.d/010_pi-nopasswd
+  ```
+  (replace `pi` with your actual username if different)
 - System packages used by various features:
   ```
   sudo apt install ffmpeg mpv alsa-utils bluez cd-discid imagemagick pipewire wireplumber
