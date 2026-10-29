@@ -54,7 +54,29 @@ npm install
 node server.js
 ```
 
-Then open `http://tonbox.local:8000` in a browser
+## Opening the app
+
+Open `http://tonbox.local:8000` in a browser on any device in the same local
+network (replace `tonbox` with your Pi's actual hostname if you changed it).
+If `.local` addresses don't resolve on your network/device, use the Pi's IP
+address instead, e.g. `http://192.168.1.50:8000` - you can find it with
+`hostname -I` on the Pi itself, or check your router's device list.
+
+## Adding a home screen / desktop icon
+
+Tonbox ships as a PWA (Progressive Web App), so your browser can add it as an
+app-like icon instead of having to type the address every time:
+
+- **Chrome/Edge (desktop):** open the Tonbox page, click the install icon (a
+  small monitor with a down-arrow) at the right of the address bar, then
+  "Install".
+- **Chrome (Android):** open the Tonbox page, tap the three-dot menu, then
+  "Add to Home screen" (or "Install app").
+- **Safari (iOS/iPadOS):** open the Tonbox page, tap the Share icon, then
+  "Add to Home Screen".
+
+The icon will show up like a regular app and open Tonbox directly, without
+browser address bar/tabs.
 
 On first start there is no `.settings.conf` yet — the app runs with built-in
 defaults. Configure WiFi, audio output, a YouTube Data API key (optional, for

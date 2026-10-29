@@ -39,6 +39,19 @@ global.update = "false"
 //Ergebnis der letzten checkUpdateAllowed()-Prüfung, für den Stripe-Button in system.ejs
 global.updateCheck = {allowed:false, message:""}
 
+//Browser-Tab-Titel (siehe views/partials/head.ejs) - "Tonbox - <hostname> Manager" statt
+//des bisherigen fixen "Tonbox - Modern Media", damit man bei mehreren Tonboxen im Netzwerk
+//die Browser-Tabs/Lesezeichen unterscheiden kann. Einmalig beim Start ermittelt (kein
+//Hostname-Aenderungs-Feature in dieser BASIS-Version, das einen Refresh noetig machen wuerde).
+global.hostname = ""
+async function refreshHostname(){
+    try{
+        global.hostname = (await execCmd("hostname >&1")).trim()
+    }catch(err){
+        global.hostname = ""
+    }
+}
+
 //mountpoints
 global.devADrecords = "nok"
 global.devHome = "nok"
@@ -680,6 +693,7 @@ module.exports = function(required){
         setInterval(doMonitorBT, 1500);
         setInterval(monitorTemperatur, 15000);
         setInterval(monitorFreeSpace, 20000);
+        refreshHostname()
     },
     this.ledOrange = function(turn){
         if(turn==="On"){

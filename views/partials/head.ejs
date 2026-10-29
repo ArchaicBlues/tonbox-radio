@@ -1,5 +1,9 @@
 <meta charset="UTF-8">
-<title>Tonbox - Modern Media</title>
+<% if (typeof hostname !== 'undefined' && hostname) { %>
+<title>Tonbox - <%= hostname %> Manager</title>
+<% } else { %>
+<title>Tonbox Media Manager</title>
+<% } %>
 
 
 <link rel="manifest" href="/manifest/manifest.json">
