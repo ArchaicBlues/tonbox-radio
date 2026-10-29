@@ -1,0 +1,177 @@
+<title>Tonbox - AGB &amp; Zahlungsabwicklung</title>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    margin: 0;
+    padding: 24px;
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.55;
+    color: #222;
+    background: #fff;
+  }
+  h1 { font-size: 1.4rem; margin-top: 0; }
+  h2 { font-size: 1.1rem; margin-top: 1.8em; }
+  .back {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 6px 16px;
+    background: #0d6efd;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.95rem;
+  }
+  .draft-notice {
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+  }
+</style>
+</head>
+<body>
+  <a class="back" href="/system">&larr; Zurück</a>
+
+  <div class="draft-notice">
+    <!-- ENTWURF: vor Veröffentlichung von einem Anwalt prüfen lassen, insbesondere:
+    - genaue Firmierung/Adresse der jeweils vertragsschließenden Stripe-Gesellschaft
+      (abhängig vom Sitzland des eigenen Stripe-Kontos)
+    - Kontaktdaten (Name, Anschrift, E-Mail, ggf. Telefon) im Widerrufsrecht-Abschnitt
+      einfügen - dort aktuell nur als Platzhalter markiert
+    - falls noch nicht an anderer Stelle vorhanden, um die übrigen für den Verkauf
+      digitaler Inhalte gesetzlich vorgeschriebenen Angaben ergänzen (Vertragsschluss,
+      Leistungsbeschreibung, Gewährleistung) -->
+  </div>
+
+  <h1>Allgemeine Geschäftsbedingungen &amp; Hinweise zur Zahlungsabwicklung</h1>
+
+  <h2>1. Zahlungsdienstleister</h2>
+  <p>
+    Für die Zahlungsabwicklung beim Kauf der kostenpflichtigen Vollversion unserer Software
+    nutzen wir den Zahlungsdienstleister <strong>Stripe</strong>. Vertragspartner für die
+    Zahlungsabwicklung ist je nach Sitz unseres Stripe-Kontos und Ihrem Aufenthaltsort:
+  </p>
+  <p>
+    Stripe Payments Europe, Limited<br>
+    1 Grand Canal Street Lower, Grand Canal Dock, Dublin 2, Irland<br>
+    (für Kunden innerhalb des Europäischen Wirtschaftsraums)
+  </p>
+  <p>
+    bzw. Stripe, Inc., USA, oder ein mit Stripe verbundenes Unternehmen (für Kunden außerhalb
+    des EWR).<br>
+    Datenschutzerklärung des Anbieters: <a href="https://stripe.com/privacy" target="_blank" rel="noopener">stripe.com/privacy</a>
+  </p>
+  <p>
+    <strong>Stripe fungiert hierbei ausschließlich als Zahlungsdienstleister
+    (Payment Processor), nicht als "Merchant of Record".</strong> Verkäufer und
+    Vertragspartner für den Kauf der Vollversion bleiben ausschließlich wir selbst; wir sind
+    daher auch für Rechnungsstellung, Umsatzsteuer und die Erfüllung des Kaufvertrags
+    verantwortlich. Stripe übernimmt ausschließlich die technische Abwicklung der Zahlung.
+  </p>
+
+  <h2>2. Art und Zweck der verarbeiteten Daten</h2>
+  <p>
+    Wenn Sie den Kaufprozess für die Vollversion starten, öffnet sich ein Eingabefenster von
+    Stripe. Im Rahmen dieses Bestellvorgangs werden folgende Daten direkt durch Stripe erhoben
+    und verarbeitet:
+  </p>
+  <ul>
+    <li>Stammdaten (z.&nbsp;B. Name, E-Mail-Adresse)</li>
+    <li>Rechnungsdaten (z.&nbsp;B. Adresse, Land zur Ermittlung der korrekten Umsatzsteuer)</li>
+    <li>Zahlungsdaten (z.&nbsp;B. Kreditkartendaten, IP-Adresse)</li>
+  </ul>
+  <p>
+    Wir selbst erhalten zu keinem Zeitpunkt Zugriff auf Ihre vollständigen Kreditkarten- oder
+    Bankdaten. Stripe übermittelt uns nach erfolgreichem Kauf lediglich eine Bestätigung
+    (Webhook) inklusive Ihrer E-Mail-Adresse und des Transaktionsstatus, um das Update für Sie
+    freizuschalten.
+  </p>
+
+  <h2>3. Rechtsgrundlage der Verarbeitung</h2>
+  <p>
+    Die Weiterleitung an Stripe und die dortige Verarbeitung der Daten erfolgt auf Basis von
+    Art. 6 Abs. 1 lit. b DSGVO (Erfüllung eines Vertrages oder Durchführung vorvertraglicher
+    Maßnahmen). Ohne die Bereitstellung und Verarbeitung dieser Daten ist ein Kauf und die
+    anschließende Freischaltung des Updates technisch nicht möglich.
+  </p>
+
+  <h2>4. Drittlandstransfer (USA)</h2>
+  <p>
+    Stripe, Inc. hat ihren Sitz in den USA; auch bei Abwicklung über die europäische
+    Konzerngesellschaft (Stripe Payments Europe, Limited, Irland) kann es im Rahmen der
+    Zahlungsabwicklung zu einer Übermittlung Ihrer Daten in die USA kommen, da Stripe
+    konzernweit auf eine gemeinsame technische Infrastruktur zugreift. Die USA gelten
+    datenschutzrechtlich grundsätzlich als Drittland ohne ein von der EU-Kommission
+    automatisch festgestelltes angemessenes Datenschutzniveau. Stripe hat sich jedoch
+    vertraglich zur Einhaltung der EU-Standardvertragsklauseln (Art. 46 Abs. 2 lit. c DSGVO)
+    verpflichtet, die ein angemessenes Datenschutzniveau auch bei einer Datenübermittlung in
+    die USA sicherstellen sollen. Weitere Informationen hierzu finden Sie in der
+    Datenschutzerklärung von Stripe sowie im Stripe Data Processing Agreement
+    (<a href="https://stripe.com/legal/dpa" target="_blank" rel="noopener">stripe.com/legal/dpa</a>).
+  </p>
+
+  <h2 id="widerruf">5. Widerrufsrecht</h2>
+  <p>
+    Verbrauchern steht ein gesetzliches Widerrufsrecht zu. Verbraucher ist jede natürliche
+    Person, die ein Rechtsgeschäft zu Zwecken abschließt, die überwiegend weder ihrer
+    gewerblichen noch ihrer selbständigen beruflichen Tätigkeit zugerechnet werden können.
+  </p>
+  <p><strong>Widerrufsbelehrung</strong></p>
+  <p>
+    Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu
+    widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.
+  </p>
+  <p>
+    Um Ihr Widerrufsrecht auszuüben, müssen Sie uns
+    (<span style="background:#ffe69c; padding:0 4px;">[Name, Anschrift, E-Mail-Adresse,
+    ggf. Telefonnummer des Verkäufers einfügen]</span>)
+    mittels einer eindeutigen Erklärung (z.&nbsp;B. ein mit der Post versandter Brief oder
+    eine E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können
+    dafür das nachfolgende Muster-Widerrufsformular verwenden, das jedoch nicht
+    vorgeschrieben ist.
+  </p>
+  <p>
+    Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung
+    des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.
+  </p>
+  <p><strong>Folgen des Widerrufs</strong></p>
+  <p>
+    Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen
+    erhalten haben, unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag
+    zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns
+    eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei
+    der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich
+    etwas anderes vereinbart; in keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte
+    berechnet.
+  </p>
+  <p><strong>Vorzeitiges Erlöschen des Widerrufsrechts bei digitalen Inhalten</strong></p>
+  <p>
+    Das Widerrufsrecht erlischt vorzeitig, wenn wir mit der Ausführung des Vertrags (d.&nbsp;h.
+    der Freischaltung/Bereitstellung der Vollversion bzw. des Updates) begonnen haben, nachdem
+    Sie
+  </p>
+  <ul>
+    <li>ausdrücklich zugestimmt haben, dass wir mit der Ausführung des Vertrags vor Ablauf der
+      Widerrufsfrist beginnen, und</li>
+    <li>Ihre Kenntnis davon bestätigt haben, dass Sie durch Ihre Zustimmung mit Beginn der
+      Ausführung des Vertrags Ihr Widerrufsrecht verlieren.</li>
+  </ul>
+  <p>
+    Diese Zustimmung und Kenntnisnahme holen wir separat vor Abschluss des Kaufvorgangs über
+    ein eigenes, von der AGB-Zustimmung getrenntes Kontrollkästchen ein und bestätigen sie
+    Ihnen zusätzlich noch einmal schriftlich auf einem dauerhaften Datenträger in der
+    automatischen Bestätigungs-E-Mail, die Sie unmittelbar nach erfolgreicher Zahlung an die
+    bei Stripe hinterlegte E-Mail-Adresse erhalten.
+  </p>
+
+</body>
+</html>

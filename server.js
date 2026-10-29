@@ -2083,8 +2083,33 @@ app.get('/system', function (req, res) {
 //Button "Jetzt bezahlen (Stripe)" auf der System-Seite verlinkt hierher statt direkt auf
 //Stripe - so kann getStripeCheckoutUrl() die Checkout-URL erst per API erzeugen (siehe
 //funcsystem.js) und success_url/cancel_url auf genau diese Tonbox zurückzeigen lassen.
+//Serverseitige Pruefung der beiden Zustimmungs-Checkboxen auf system.ejs (AGB +
+//ausdrueckliche Zustimmung zum vorzeitigen Erloeschen des Widerrufsrechts bei digitalen
+//Inhalten, siehe /agb). Rein clientseitiges JS (Button per CSS/dataset deaktiviert) liesse
+//sich per Entwicklerkonsole trivial umgehen und haette ausserdem KEINEN Nachweis zur Folge,
+//dass die Zustimmung ueberhaupt erteilt wurde - help/consent.log ist genau dieser Nachweis
+//(MAC + Zeitstempel + welche Checkboxen gesetzt waren), unabhaengig von der sonst fuer
+//Debug-Zwecke gedachten (und aktuell deaktivierten) logging()-Funktion in funcsystem.js.
+async function logPurchaseConsent(mac, agbAccepted, withdrawalWaived){
+    try{
+        const line = new Date().toISOString() + "\tmac=" + mac + "\tagb=" + agbAccepted + "\twiderrufWaived=" + withdrawalWaived + "\n"
+        await fs.promises.appendFile("help/consent.log", line)
+    }catch(err){
+        console.log("logPurchaseConsent: " + err)
+    }
+}
+
 app.get('/buyUpdate', async function (req, res) {
     console.log(rememberDB + "*** Url: " + req.url)
+    const agbAccepted = req.query.agbAccept === '1'
+    const withdrawalWaived = req.query.withdrawalWaiver === '1'
+    const mac = await getMacAddress()
+    await logPurchaseConsent(mac, agbAccepted, withdrawalWaived)
+    if (!agbAccepted || !withdrawalWaived) {
+        procStatus.text = "Bitte zuerst AGB und Widerrufs-Hinweis auf der Seite akzeptieren"
+        doSystem(res)
+        return
+    }
     const returnUrl = req.protocol + "://" + req.get('host')
     const url = await getStripeCheckoutUrl(returnUrl)
     if (url) {
@@ -2219,6 +2244,10 @@ app.post('/systemSettings', urlencodedParser, function (req, res) {
     console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
     configSettings(res, req.body)
 })
+
+app.get('/agb', function (req, res) {
+    res.render('pages/agb', {});
+});
 
 app.get('/howto', function (req, res) {
     console.log("rememberDB="+rememberDB + " " + req.url + ", body:" + JSON.stringify(req.body))
