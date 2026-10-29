@@ -188,18 +188,22 @@ async function ipConfig() {
     try {
         if (ip_config_events === 0){
             await loadSettings()   //vor doLAN() laden, sonst sieht doLAN() nur die Defaults statt der .settings.conf-Werte
-            //Retry-Timer VOR doLAN() setzen, nicht danach: wirft doLAN() unerwartet (siehe
-            //try/catch dort, das ist nur die erste Verteidigungslinie), wuerde diese ganze
-            //Funktion sonst abbrechen, BEVOR der Timer je gesetzt wird - der Start bliebe
-            //dann dauerhaft haengen (kein configureTonbox()/startWebApp() mehr), da
-            //ipConfig() ueber das einmalige setTimeout() am Dateiende nie wieder laeuft.
-            ipConfigTimer = setInterval(ipConfig, 1000)
+            //try/catch um doLAN(): ein Fehler dort darf nicht verhindern, dass der Timer
+            //unten gesetzt wird (siehe vorherige Version dieses Fixes) - sonst bleibt der
+            //Start dauerhaft haengen. ABER: der Timer darf erst NACH diesem await stehen,
+            //nicht davor! doLAN() braucht mehrere Sekunden (viele sequentielle sudo-Befehle)
+            //- waere der Timer schon VOR doLAN() aktiv, wuerde er waehrenddessen bereits
+            //mehrfach ticken, jedes Mal erneut in diesen Block laufen (ip_config_events ist
+            //ja noch 0) und so mehrfach ueberlappend doLAN()+configureTonbox()+startWebApp()
+            //anstossen - genau das fuehrte zu "EADDRINUSE", weil app.listen(8000) dann
+            //mehrfach parallel aufgerufen wurde.
             try{
                 await doLAN(false)
             }catch(err){
                 console.log("ipConfig: doLAN fehlgeschlagen, Start laeuft trotzdem weiter: " + err)
                 logging("ipConfig: doLAN fehlgeschlagen, Start laeuft trotzdem weiter: " + err)
             }
+            ipConfigTimer = setInterval(ipConfig, 1000)
         }
         if (++ip_config_events < constants.IP_CONFIG_ELAPSED_EVENTS) {
             console.log("ping...")
