@@ -19,26 +19,34 @@ are present in the UI but intentionally disabled as no-ops, marked with
 ## Prerequisites
 
 - Raspberry Pi (tested on Raspberry Pi OS / Debian 12 "bookworm", `aarch64`)
-- Node.js (tested with v21; install via [nvm](https://github.com/nvm-sh/nvm) is recommended)
+- Node.js (tested with v21; install via [nvm](https://github.com/nvm-sh/nvm) for
+  a pinned version, or simply via `apt` as shown below)
 - Passwordless `sudo` for your user (the app runs many `sudo` commands - mount,
   network config, systemctl, reboot, ...). This is already the default on stock
-  Raspberry Pi OS for the `pi` user (`/etc/sudoers.d/010_pi-nopasswd`). On any
-  other base image, set it up once before the first start, otherwise the app
-  will hang waiting for a password prompt that never comes (especially once
-  running unattended as a systemd service after a reboot):
-  ```
-  echo "pi ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_pi-nopasswd
-  sudo chmod 440 /etc/sudoers.d/010_pi-nopasswd
-  ```
-  (replace `pi` with your actual username if different)
-- System packages used by various features:
-  ```
-  sudo apt install ffmpeg mpv alsa-utils bluez cd-discid imagemagick pipewire wireplumber
-  ```
+  Raspberry Pi OS for the `pi` user (`/etc/sudoers.d/010_pi-nopasswd`), but set
+  it up explicitly anyway (see Installation below) - otherwise the app hangs
+  waiting for a password prompt that never comes, especially once running
+  unattended as a systemd service after a reboot.
+- System packages used by various features (ffmpeg, mpv, bluetooth, imaging,
+  audio - also covered in the Installation steps below).
 
 ## Installation
 
 ```bash
+# basic tools
+sudo apt update
+sudo apt install -y git npm
+
+# passwordless sudo for this user - the app calls sudo in many places and
+# would otherwise hang on the first prompt once running unattended at boot
+# (replace "pi" with your actual username if different)
+echo "pi ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_pi-nopasswd
+sudo chmod 440 /etc/sudoers.d/010_pi-nopasswd
+
+# system packages used by various features
+sudo apt install -y ffmpeg mpv alsa-utils bluez cd-discid imagemagick pipewire wireplumber
+
+# get the app and run it
 git clone https://github.com/archaicblues/tonbox-media.git
 mv tonbox-media ArchaicNodeEJS
 cd ArchaicNodeEJS
