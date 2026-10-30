@@ -7,7 +7,16 @@ Wants=network-online.target pipewire.service wireplumber.service bt-a2dp-monitor
 Type=simple
 WorkingDirectory=/home/pi/ArchaicNodeEJS
 
-ExecStart=/home/pi/.nvm/versions/node/v21.6.1/bin/node /home/pi/ArchaicNodeEJS/server.js
+# Statt eines hartcodierten "/home/pi/.nvm/versions/node/vX.Y.Z/bin/node" - nvm installiert
+# je nach Zeitpunkt/Geraet eine andere exakte Patch-Version, ein fest eingetragener Pfad
+# brach deshalb auf jedem Geraet mit abweichender Version (EXEC-Fehler). "bash -lc" (Login-
+# Shell) loest das NICHT: Debian/Raspberry-Pi-OS' Standard-~/.bashrc bricht fuer
+# nicht-interaktive Shells (genau das, was systemd startet) ganz am Anfang ab, bevor die
+# nvm-Sourcing-Zeilen weiter unten je erreicht werden. nvm-exec ist nvms eigenes,
+# dafuer gebautes Hilfsskript: sourct nvm.sh direkt (unabhaengig von .bashrc) und loest
+# ueber die .nvmrc-Datei im WorkingDirectory (pinnt nur Major-Version "21", nicht den
+# exakten Patch) die passende installierte Version auf.
+ExecStart=/home/pi/.nvm/nvm-exec node /home/pi/ArchaicNodeEJS/server.js
 
 Restart=always
 RestartSec=5

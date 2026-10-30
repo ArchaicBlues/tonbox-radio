@@ -88,9 +88,13 @@ directory, which is git-ignored and never shared.
 
 A ready-made unit file is provided at
 [filter/conf/userServices/Tonbox.service](filter/conf/userServices/Tonbox.service).
-It assumes the default `pi` user and an install path of
-`/home/pi/tonbox` — adjust `WorkingDirectory` and the `node` binary path in
-`ExecStart` if yours differ, then:
+It assumes the default `pi` user and the `/home/pi/ArchaicNodeEJS` install path from
+the Installation steps above — adjust `WorkingDirectory` if yours differs. `ExecStart`
+runs node via nvm's own `nvm-exec` helper rather than a hardcoded version path, since
+nvm installs a different exact patch version depending on when/where you ran
+`nvm install` - it resolves the version via the `.nvmrc` file in the project root
+(pins only the major version). If nvm itself is installed somewhere other than the
+default `~/.nvm`, adjust the `nvm-exec` path in `ExecStart` accordingly. Then:
 
 ```bash
 mkdir -p ~/.config/systemd/user
