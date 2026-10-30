@@ -12,11 +12,13 @@ WorkingDirectory=/home/pi/ArchaicNodeEJS
 # brach deshalb auf jedem Geraet mit abweichender Version (EXEC-Fehler). "bash -lc" (Login-
 # Shell) loest das NICHT: Debian/Raspberry-Pi-OS' Standard-~/.bashrc bricht fuer
 # nicht-interaktive Shells (genau das, was systemd startet) ganz am Anfang ab, bevor die
-# nvm-Sourcing-Zeilen weiter unten je erreicht werden. nvm-exec ist nvms eigenes,
-# dafuer gebautes Hilfsskript: sourct nvm.sh direkt (unabhaengig von .bashrc) und loest
-# ueber die .nvmrc-Datei im WorkingDirectory (pinnt nur Major-Version "21", nicht den
-# exakten Patch) die passende installierte Version auf.
-ExecStart=/home/pi/.nvm/nvm-exec node /home/pi/ArchaicNodeEJS/server.js
+# nvm-Sourcing-Zeilen weiter unten je erreicht werden. nvms eigenes Hilfsskript "nvm-exec"
+# waere dafuer gebaut, ist aber je nach Installationsart/-zeitpunkt nicht auf jedem Geraet
+# vorhanden - deshalb hier direkt nachgebildet: nvm.sh (das eigentliche Kernskript, das
+# jede nvm-Installation besitzt) wird selbst eingebunden, danach loest "nvm use" ueber die
+# .nvmrc-Datei im WorkingDirectory (pinnt nur Major-Version "21", nicht den exakten Patch)
+# die passende installierte Version auf.
+ExecStart=/bin/bash -c 'export NVM_DIR="/home/pi/.nvm"; . "$NVM_DIR/nvm.sh" --no-use; nvm use >/dev/null; exec node /home/pi/ArchaicNodeEJS/server.js'
 
 Restart=always
 RestartSec=5

@@ -90,11 +90,14 @@ A ready-made unit file is provided at
 [filter/conf/userServices/Tonbox.service](filter/conf/userServices/Tonbox.service).
 It assumes the default `pi` user and the `/home/pi/ArchaicNodeEJS` install path from
 the Installation steps above — adjust `WorkingDirectory` if yours differs. `ExecStart`
-runs node via nvm's own `nvm-exec` helper rather than a hardcoded version path, since
-nvm installs a different exact patch version depending on when/where you ran
-`nvm install` - it resolves the version via the `.nvmrc` file in the project root
-(pins only the major version). If nvm itself is installed somewhere other than the
-default `~/.nvm`, adjust the `nvm-exec` path in `ExecStart` accordingly. Then:
+sources nvm's core `nvm.sh` script directly and then runs `nvm use` rather than a
+hardcoded version path, since nvm installs a different exact patch version depending
+on when/where you ran `nvm install` - it resolves the version via the `.nvmrc` file in
+the project root (pins only the major version). This intentionally avoids nvm's own
+`nvm-exec` convenience script, since that extra file isn't present on every device's
+nvm installation, while `nvm.sh` itself always is. If nvm itself is installed
+somewhere other than the default `~/.nvm`, adjust `NVM_DIR` in `ExecStart` accordingly.
+Then:
 
 ```bash
 mkdir -p ~/.config/systemd/user
