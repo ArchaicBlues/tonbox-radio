@@ -2351,9 +2351,9 @@ module.exports = function(required){
         try {
             // Versuch zu laden
             if (!await checkRpioBinary()){
-                let result = await execCmd("npm list rpio >&1")
-                if (result.match("empty")){
-                    await reInitNodeModules()                }
+                // Paket fehlt komplett ODER Paket da, aber natives .node-Binary nie
+                // gebaut/kompatibel (z.B. Build-Tools fehlten) - in beiden Faellen reparieren
+                await reInitNodeModules()
             }
             return require('rpio');
         } catch (err) {
