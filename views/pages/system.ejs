@@ -288,6 +288,12 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
                                 alert('Bitte zuerst beide Haken oben setzen.');
                                 return;
                             }
+                            //Serverseitiger Roundtrip (/buyUpdate: Zustimmungs-Pruefung/Protokollierung,
+                            //dann Erstellung der Stripe-Checkout-Session) bleibt bestehen - der Browser
+                            //wuerde sonst bis zur Antwort einfach die aktuelle Seite unveraendert zeigen.
+                            //Overlay ueberbrueckt das, damit der Klick wie ein nahtloser Uebergang zu
+                            //Stripe wirkt statt wie ein kurzes Haengenbleiben.
+                            document.getElementById('buyRedirectOverlay').style.display = 'flex';
                             window.location.href = '/buyUpdate?agbAccept=1&withdrawalWaiver=1';
                         }
                         </script>
@@ -296,6 +302,14 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
                             onclick="goToBuyUpdate()">
                             Jetzt bezahlen (Stripe) - <%- updatePrice %>&euro;<%- stripeSandbox ? ' [Test]' : '' %>
                         </button>
+                        <div id="buyRedirectOverlay" style="display:none; position:fixed; inset:0; background:#000;
+                            color:#00d2ff; z-index:9999; flex-direction:column; justify-content:center;
+                            align-items:center; font-size:1.3rem; font-family:sans-serif;">
+                            <div style="border:6px solid #222; border-top:6px solid #00d2ff; border-radius:50%;
+                                width:50px; height:50px; margin-bottom:24px; animation:spin 1s linear infinite;"></div>
+                            <div>Weiterleitung zu Stripe …</div>
+                        </div>
+                        <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
                         <div class="tv-empty" style="margin-top:10px;">
                             Oder: Die MAC-Adresse dieser Tonbox ist nicht registriert, aber bereits mit einer
                             anderen Tonbox bezahlt? Email und Secret dieser bezahlten Tonbox eingeben und
