@@ -39,12 +39,21 @@
 
         <div>
         <!-- <h6>Mit Änderung der derzeit gültigen Web-App Adresse <b><%- settings.ip %></b> wird das System neu gestartet!</h6>                 -->
+        <%
+            //Praefix aus dem gerade erkannten Gateway ableiten statt fest "192.168.2."/"192.168."
+            //anzunehmen - sonst landet die neue statische IP in einem Subnetz, das zum echten
+            //Router gar nicht passt (die meisten Heimnetze sind NICHT 192.168.2.x).
+            const gwOctets = (ipList[0] || "").split(".")
+            const ip3Prefix = (gwOctets.length === 4) ? gwOctets.slice(0,3).join(".") : "192.168.2"
+            const gw2Prefix = (gwOctets.length === 4) ? gwOctets.slice(0,2).join(".") : "192.168"
+            const gwPlaceholder = (gwOctets.length === 4) ? gwOctets.slice(2).join(".") : "2.1"
+        %>
         <label><b>IP address</b></label>
-        192.168.2.<input type="text" name="ip" size="3" maxlength="3" aria-label="ip" placeholder="140">&nbsp;[10..254]<br><br>
+        <%- ip3Prefix %>.<input type="text" name="ip" size="3" maxlength="3" aria-label="ip" placeholder="140">&nbsp;[10..254]<br><br>
         <br>
         <!-- <h6>Router Einstellung hier eintragen</h6>                 -->
         <label><b>Gateway</b></label>
-        192.168.<input type="text" name="gateway" size="5" maxlength="5" aria-label="gateway" placeholder="2.1"><br><br>
+        <%- gw2Prefix %>.<input type="text" name="gateway" size="5" maxlength="5" aria-label="gateway" placeholder="<%- gwPlaceholder %>"><br><br>
         <br>
                 <!-- <h6>WLAN Einstellung bei Erstinstallation:</h6>
                 <label><b>Wifi SSID</b></label>

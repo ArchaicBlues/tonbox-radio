@@ -2181,20 +2181,31 @@ module.exports = function(required){
         try{
             procStatus.text = ""
             console.log(set)
+            //Praefix aus dem gerade erkannten Gateway ableiten statt fest "192.168.2."/"192.168."
+            //anzunehmen - sonst landet die neue statische IP in einem Subnetz, das zum echten
+            //Router gar nicht passt (die meisten Heimnetze sind NICHT 192.168.2.x). Muss hier
+            //nochmal berechnet werden, da systemSettings.ejs nur die eingegebenen Ziffern
+            //schickt, nicht das serverseitig angezeigte Praefix.
+            var gwOctets = (ipList[0] || "").split(".")
+            var ip3Prefix = (gwOctets.length === 4) ? gwOctets.slice(0,3).join(".") : "192.168.2"
+            var gw2Prefix = (gwOctets.length === 4) ? gwOctets.slice(0,2).join(".") : "192.168"
+
             if(set.ip){
                 var num = parseInt(set.ip,10)
                 if(num){
-                    if ((num >=10) && (num <= 254))
-                        if (!ipList[1].match("192.168.2." + set.ip) || (!ipList[2].match("192.168.2." + set.ip))){
-                            settings.ip = "192.168.2." + set.ip
+                    if ((num >=10) && (num <= 254)){
+                        var newIp = ip3Prefix + "." + set.ip
+                        if (!ipList[1].match(newIp) || (!ipList[2].match(newIp))){
+                            settings.ip = newIp
                             await writeSettings()
                             if (settings.ssid && settings.pass){
-                                // doLAN(true)   
+                                // doLAN(true)
                                 // doSystem(res)
-                                // return 
+                                // return
                             }else
                                 procStatus.text = "SSID und Passwort fehlt"
                         }
+                    }
                 }
             }
             if(set.gateway){
@@ -2205,7 +2216,7 @@ module.exports = function(required){
                     var b = parseInt(data[1],10)
                     if (a && b){
                         if ((a > 0) && (a <= 254) && (b > 0) && (b <= 254)){
-                            settings.gateway = "192.168."+data[0]+"."+data[1]
+                            settings.gateway = gw2Prefix+"."+data[0]+"."+data[1]
                         }
                     }
                 }
