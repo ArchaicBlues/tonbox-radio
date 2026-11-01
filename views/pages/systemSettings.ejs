@@ -55,6 +55,9 @@
         <label><b>Gateway</b></label>
         <%- gw2Prefix %>.<input type="text" name="gateway" size="5" maxlength="5" aria-label="gateway" placeholder="<%- gwPlaceholder %>"><br><br>
         <br>
+        <label><b>Hostname</b></label> (current: <%- hostname %>)<br>
+        <input type="text" name="hostname" size="20" maxlength="63" aria-label="hostname" placeholder="<%- hostname %>">&nbsp;[a-z, 0-9, "-"]<br><br>
+        <br>
                 <!-- <h6>WLAN Einstellung bei Erstinstallation:</h6>
                 <label><b>Wifi SSID</b></label>
                 <input type="text" name="ssid" size="20" aria-label="ssid" placeholder="<%- settings.ssid %>"><br>

@@ -2171,10 +2171,11 @@ module.exports = function(required){
     },
     this.doSettings = async function (res, set){
         try{
-            res.render('pages/systemSettings',{pageInfo:pageInfo,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings});
+            var currentHostname = (await execCmd("hostname >&1").catch(()=>"")).trim()
+            res.render('pages/systemSettings',{pageInfo:pageInfo,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings, hostname:currentHostname});
         }
         catch (err){
-            res.render('pages/systemSettings',{pageInfo:pageInfo,resultTV:resultTV,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings});
+            res.render('pages/systemSettings',{pageInfo:pageInfo,resultTV:resultTV,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings, hostname:""});
         }
     }
     this.configSettings = async function (res,set){
@@ -2219,6 +2220,24 @@ module.exports = function(required){
                             settings.gateway = newGateway
                         }
                     }
+                }
+            }
+            if (set.hostname){
+                //nur a-z, 0-9, '-' erlaubt (RFC 1123 Label) - Wert landet direkt im Shell-Kommando
+                var newHost = set.hostname.trim().toLowerCase()
+                if (/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(newHost)){
+                    var oldHost = (await execCmd("hostname >&1").catch(()=>"")).trim()
+                    if (newHost !== oldHost){
+                        await execCmd("sudo hostnamectl set-hostname " + newHost)
+                        await execCmd("sudo sed -i 's/^127\\.0\\.1\\.1.*/127.0.1.1\\t" + newHost + "/' /etc/hosts")
+                        await execCmd("sudo systemctl restart avahi-daemon")
+                        //global.hostname (Browser-Tab-Titel, siehe head.ejs) sonst erst beim
+                        //naechsten monitorSystem()-Zyklus aktualisiert
+                        await refreshHostname()
+                        procStatus.text += " Hostname geändert zu '" + newHost + "' - bitte neu starten (Reboot), damit alle Dienste den neuen Namen übernehmen"
+                    }
+                } else {
+                    procStatus.text += " ungültiger Hostname (nur a-z, 0-9 und '-', max. 63 Zeichen, nicht mit '-' beginnen/enden)"
                 }
             }
             await writeSettings()
