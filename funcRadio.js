@@ -399,8 +399,8 @@ module.exports = function(){
 
     res.render('pages/radioStation', {pageInfo:pageInfo,dat:stationCount, search:radioUserSearch,
       rd:radioFound, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(),
-      pState:procStatus, rec:getRadioRec(),settings:settings,vol:volumeAudioOut,play:radioPlayIndex,
-      stationOffset:0, hasMoreStations:(radioValidatedUpTo < radioRawCandidates.length), nextOffset:radioFound.length});
+      pState:procStatus,settings:settings,vol:volumeAudioOut,play:radioPlayIndex,
+      stationOffset:0, hasMoreStations:(radioValidatedUpTo < radioRawCandidates.length)});
   },
   //Bedarfsgesteuerte Validierung fuer "Next 50 Stations" (server.js): prueft aus
   //radioRawCandidates nur so viele weitere, noch ungeprüfte Kandidaten, wie noetig sind,
@@ -637,8 +637,7 @@ module.exports = function(){
     res.render('pages/usbAudio',{
         pageInfo:pageInfo,settings:settings, 
         btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), 
-        pState:procStatus, basetracks:myUSB, dirMain:0, 
-        indexStart:0, loc:rememberDB,vol:volumeAudioOut
+        pState:procStatus, basetracks:myUSB, loc:rememberDB,vol:volumeAudioOut
     })         
   }, 
   this.playMusic = async function(res,track,delUser) {
@@ -656,11 +655,11 @@ module.exports = function(){
     try{
       let result = await this.getAllTracks(dir)
       if (result){
-        res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, basetracks:allTracks, dirMain:0, indexStart:trackIndex, loc:dir, vidsrc:"0",vol:volumeAudioOut})
+        res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, basetracks:allTracks, dirMain:0, loc:dir,vol:volumeAudioOut})
         trackIndex--
       }else{
         //Radio und Youtube zulassen, wenn kein "mediaServer"-Verzeichnis gefunden wurde
-        res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, basetracks:"", dirMain:0, indexStart:0, loc:dir, vidsrc:"0",vol:volumeAudioOut})
+        res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, basetracks:"", dirMain:0, loc:dir,vol:volumeAudioOut})
       }
     }
     catch(err){
@@ -849,7 +848,7 @@ module.exports = function(){
   this.showResultAgain = function (res){
     res.render('pages/radioStation', {pageInfo:pageInfo,dat:stationCount, search:radioUserSearch,  
       rd:radioFound, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), 
-      pState:procStatus, rec:getRadioRec(),
+      pState:procStatus,
       settings:settings,
       vol:volumeAudioOut,
       settings:settings, 
@@ -887,7 +886,7 @@ module.exports = function(){
     res.render('pages/radioStation', {pageInfo:pageInfo,
         dat: stationCount, search:radioUserSearch, rd:radioFound,
         btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-        pState: procStatus, rec: getRadioRec(),
+        pState: procStatus,
         settings:settings,
         vol: volumeAudioOut,
         play: radioPlayIndex,

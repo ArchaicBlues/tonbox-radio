@@ -95,7 +95,7 @@ module.exports = function (required) {
       res.render('pages/playAudioCapture', {
         pageInfo: pageInfo,
         btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-        pState: procStatus, rec: getRadioRec(),
+        pState: procStatus,
         settings: settings,
         vol: volumeAudioOut,
       });
@@ -115,11 +115,10 @@ module.exports = function (required) {
     procStatus.text = "Feature disabled in this BASIS build"
     if (res) {
       res.render('pages/audioCapture', {
-        pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez,
+        pageInfo: pageInfo, settings: settings, recSide: recSide, page: "normal", btDevice: bluez,
         recording: getScheduledJobsWithoutTimeout(),
         pState: procStatus, audioInfo: "none",
-        discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck,
-        getPara: true, vol: volumeAudioOut, settings: settings
+        discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, settings: settings
       })
     }
   },
@@ -155,9 +154,8 @@ module.exports = function (required) {
     procStatus.text = "Feature disabled in this BASIS build"
     if (res) {
       res.render('pages/audioCapture', {
-        pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor,
+        pageInfo: pageInfo, settings: settings,
         recSide: recSide, page: "normal",
-        storage: storage,
         btDevice: bluez,
         recording: getScheduledJobsWithoutTimeout(),
         pState: procStatus,
@@ -165,8 +163,6 @@ module.exports = function (required) {
         discogs: discogsResult,
         recAD: recAD,
         userSave: adjustRenameState.userCheck,
-        getPara: false,
-        vol: settings.jackVolume,
         settings: settings
       })
     }
@@ -338,11 +334,10 @@ module.exports = function (required) {
       if (res) doTape(res, false)
     } else {
       if (res) res.render('pages/audioCapture', {
-        pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez,
+        pageInfo: pageInfo, settings: settings, recSide: recSide, page: "normal", btDevice: bluez,
         recording: getScheduledJobsWithoutTimeout(),
         pState: procStatus, audioInfo: progressInfo,
-        discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck,
-        getPara: true, vol: volumeAudioOut, settings: settings
+        discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, settings: settings
       })
     }
   },

@@ -280,21 +280,21 @@ async function showVideo(res, uri) {
             if (result.match("ac3")){
                 console.log("ac3 need to convert: "+subdir[x]+" in "+dirs[i])
                 await convertAC3(uri)
-                res.render('pages/showVideo', {pageInfo:pageInfo,vol:volumeAudioOut,btDevice: bluez,recording: getScheduledJobsWithoutTimeout(),
-                    pState: procStatus,vidsrc: uri, convert: true,})
+                res.render('pages/showVideo', {pageInfo:pageInfo,btDevice: bluez,recording: getScheduledJobsWithoutTimeout(),
+                    pState: procStatus,vidsrc: uri,})
             } else
-            res.render('pages/showVideo', {pageInfo:pageInfo,vol:volumeAudioOut,btDevice: bluez,recording: getScheduledJobsWithoutTimeout(),
-                pState: procStatus,vidsrc: uri, convert: false, settings:settings,})
+            res.render('pages/showVideo', {pageInfo:pageInfo,btDevice: bluez,recording: getScheduledJobsWithoutTimeout(),
+                pState: procStatus,vidsrc: uri, settings:settings,})
          }else{
             //no video stream
             await execCmd("rm " + uri)
             procStatus.text = "no video stream detected in "+uri
-            res.render('pages/showVideo', {pageInfo:pageInfo,vol:volumeAudioOut, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dir: 0, settings:settings, indexStart: 0, loc: rememberDB, vidsrc: uri, convert: false, })
+            res.render('pages/showVideo', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, settings:settings, vidsrc: uri, })
         }
     }
     catch(err){
         console.log(err)
-        res.render('pages/showVideo', {pageInfo:pageInfo,vol:volumeAudioOut, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dir: 0, settings:settings, indexStart: 0, loc: rememberDB, vidsrc: uri, convert: false,  })
+        res.render('pages/showVideo', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, settings:settings, vidsrc: uri,  })
     }
 }
 
@@ -375,7 +375,7 @@ app.get('/entry', function (req, res) {
         res.render('pages/radioStation', {pageInfo:pageInfo,
             dat: stationCount, search:radioUserSearch, rd:radioFound,
             btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-            pState: procStatus, rec: getRadioRec(),
+            pState: procStatus,
             settings:settings,
             vol: volumeAudioOut,
             play: radioPlayIndex,
@@ -392,7 +392,7 @@ app.get('/entry', function (req, res) {
             res.render('pages/radioStation', {pageInfo:pageInfo,
                 dat: stationCount, search:radioUserSearch, rd:radioFound,
                 btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-                pState: procStatus, rec: getRadioRec(),
+                pState: procStatus,
                 settings:settings,
                 vol: volumeAudioOut,
                 play: radioPlayIndex,
@@ -491,7 +491,7 @@ app.post('/entry', urlencodedParser, function (req, res) {
             res.render('pages/radioStation', {pageInfo:pageInfo,
                 dat: stationCount, search:radioUserSearch, rd:radioFound,
                 btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-                pState: procStatus, rec: getRadioRec(),
+                pState: procStatus,
                 settings:settings,
                 vol: volumeAudioOut,
                 settings:settings,
@@ -528,7 +528,7 @@ app.post('/entry', urlencodedParser, function (req, res) {
 
 
 app.get('/audioProcessWav', function (req, res) {
-    res.render('pages/audioProcessWav', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "extract tracks from all.wav in progress", audioInfo: progressInfo, discogs: discogsResult, tracks: "", ip: settings.ip, sysdir: settings.installDir })
+    res.render('pages/audioProcessWav', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "extract tracks from all.wav in progress", tracks: "", ip: settings.ip, sysdir: settings.installDir })
 });
 
 app.post('/audioProcessWav', urlencodedParser, function (req, res) {
@@ -541,7 +541,7 @@ app.post('/audioProcessWav', urlencodedParser, function (req, res) {
 
     initiateRecEnd("ended by user")
     if (!req.body || req.body.Back) {
-        res.render('pages/audioCapture', {pageInfo:pageInfo, settings:settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "stop playing", audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, getPara: false,   vol: settings.jackVolume, settings:settings })
+        res.render('pages/audioCapture', {pageInfo:pageInfo, settings:settings, recSide: recSide, page: "normal", btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "stop playing", audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, settings:settings })
         return
     }
 
@@ -653,7 +653,7 @@ app.get("/video-view-stream", (req, res) => {
 
 
 app.get('/audioCapture', function (req, res) {
-    res.render('pages/audioCapture', {pageInfo:pageInfo, settings:settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: getAudioCaptureSize(), discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, getPara: false,   vol: settings.jackVolume, settings:settings })
+    res.render('pages/audioCapture', {pageInfo:pageInfo, settings:settings, recSide: recSide, page: "normal", btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: getAudioCaptureSize(), discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, settings:settings })
 });
 
 
@@ -718,7 +718,7 @@ app.post('/audioCapture', urlencodedParser, async function (req, res) {
 
         //client pressed F5 (resend)
         // if (SSEIntervalTyp == constants.SSE_AD_CONVERSION) {
-        //     res.render('pages/audioCaptureStop', {pageInfo:pageInfo,page:"audioCapture", settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "", audioInfo: progressInfo, stoptime: 0, recAD: recAD, getPara: false,   setting: settings, ip: settings.ip, sysdir: settings.installDir })
+        //     res.render('pages/audioCaptureStop', {pageInfo:pageInfo,page:"audioCapture", settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "", stoptime: 0, recAD: recAD, getPara: false, ip: settings.ip})
         //     return
         // }
 
@@ -817,7 +817,7 @@ app.post('/showADrecords', urlencodedParser, function (req, res) {
     }
 
     if (req.body.User) {
-        res.render('pages/trackImageUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, image: "only" })
+        res.render('pages/trackImageUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, discogs: discogsResult, image: "only" })
         return
     }
 
@@ -892,7 +892,7 @@ app.post('/cddvd', urlencodedParser, async function (req, res) {
         res.render('pages/radioStation', {pageInfo:pageInfo,
             dat: stationCount, search:radioUserSearch, rd:radioFound,
             btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-            pState: procStatus, rec: getRadioRec(),
+            pState: procStatus,
             settings:settings,
             vol: volumeAudioOut,
             play: radioPlayIndex,
@@ -992,8 +992,7 @@ app.post('/cddvd', urlencodedParser, async function (req, res) {
             res.render('pages/cdInput', {
                 btDevice: bluez, 
                 recording: getScheduledJobsWithoutTimeout(),
-                pState: procStatus, 
-                rec: getRadioRec(),
+                pState: procStatus,
                 settings:settings,
                 maxTitel: maxCDtracks
             });
@@ -1093,7 +1092,7 @@ app.get("/showMusicWorld", (req, res) => {
     if (req.query.src === "Mediatheken"){
         pageInfo = "Mediatheken"
         res.render('pages/youtubeselect', {vol:volumeAudioOut, play:"", settings:settings, searchYouTube: searchYouTube, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), 
-        pState: procStatus, yttitle:ytTitle, ytVideoId:ytVideoId, ytFound: ytFound, mediathekSearchItem: ""})
+        pState: procStatus, yttitle:ytTitle, ytVideoId:ytVideoId, ytFound: ytFound})
         //rememberDB = req.body.check
         return
     }
@@ -1103,8 +1102,7 @@ app.get("/showMusicWorld", (req, res) => {
         res.render('pages/usbAudio',{
             pageInfo:pageInfo,settings:settings, 
             btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), 
-            pState:procStatus, basetracks:myUSB, dirMain:0, 
-            indexStart:0, loc:rememberDB,vol:volumeAudioOut
+            pState:procStatus, basetracks:myUSB, loc:rememberDB,vol:volumeAudioOut
         })         
         return
     }
@@ -1131,8 +1129,7 @@ app.post('/myUSB', urlencodedParser, function (req, res) {
     res.render('pages/usbAudio',{
         pageInfo:pageInfo,settings:settings, 
         btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), 
-        pState:procStatus, basetracks:myUSB, dirMain:0, 
-        indexStart:0, loc:rememberDB,vol:volumeAudioOut
+        pState:procStatus, basetracks:myUSB, loc:rememberDB,vol:volumeAudioOut
     })         
 })
 
@@ -1155,7 +1152,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
     // }
 
     if (req.body === "") {
-        res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, dir: 0, indexStart: 0, loc: rememberDB, vidsrc: "0", vol: volumeAudioOut })
+        res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, loc: rememberDB, vol: volumeAudioOut })
         return
     }
     if (req.body.Back) {
@@ -1210,7 +1207,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
     if (req.body.StopPlayx) {
         stopMusicPlay(constants.AUDIO_ALL)
         if (rememberDB == "videoplay") {
-            res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, dir: 0, indexStart: trackIndex, loc: "Video", vidsrc: "0", vol: volumeAudioOut})
+            res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, loc: "Video", vol: volumeAudioOut})
         } else
             res.redirect("/")
         return
@@ -1228,7 +1225,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
     //     res.render('pages/radioStation', {pageInfo:pageInfo,
     //         dat: stationCount, search:radioUserSearch, rd:radioFound,
     //         btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-    //         pState: procStatus, rec: getRadioRec(),
+    //         pState: procStatus,
     //         settings:settings,
     //         vol: volumeAudioOut,
     //         settings:settings,
@@ -1313,7 +1310,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
     // if (req.body.check.match("YouTube")) {
     //     pageInfo = "Mediatheken"
     //     res.render('pages/youtubeselect', {vol:volumeAudioOut, play:"", settings:settings, searchYouTube: searchYouTube, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), 
-    //     pState: procStatus, yttitle:ytTitle, ytVideoId:ytVideoId, ytFound: ytFound, mediathekSearchItem: ""})
+    //     pState: procStatus, yttitle:ytTitle, ytVideoId:ytVideoId, ytFound: ytFound})
     //     rememberDB = req.body.check
     //     return
     // }else
@@ -1335,7 +1332,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
         if (n >= 0 && allTracks[0] && !rememberDB.match("Radio")) {
             //DUMMY: Audio/Video library Delete/Rename disabled in this BASIS build - call
             //received, no filesystem action taken.
-            res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, dir: 0, indexStart: trackIndex, loc: rememberDB, vidsrc: "0", vol: volumeAudioOut})
+            res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, loc: rememberDB, vol: volumeAudioOut})
         } else if (n >= 0 && allTracks[0]) {
             var track = allTracks[n]
             track = escapeTrack(track)
@@ -1356,7 +1353,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
                 if (error) {
                     console.error(error)
                     procStatus.text = stderr + "  Note: Das Verzeichnis wird automatisch gelöscht, wenn es leer ist"
-                    res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, dir: 0, indexStart: trackIndex, loc: rememberDB, vidsrc: "0", vol: volumeAudioOut})
+                    res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, loc: rememberDB, vol: volumeAudioOut})
                     return
                 }
 
@@ -1366,7 +1363,7 @@ app.post('/showMusicWorld', urlencodedParser, async function (req, res) {
                 //return
             })
         } else {
-            res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, dir: 0, indexStart: 0, loc: rememberDB, vidsrc: "0", vol: volumeAudioOut })
+            res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, loc: rememberDB, vol: volumeAudioOut })
         }
     } else {
         playMusic(res, req.body.check, delUser)
@@ -1405,7 +1402,7 @@ app.post('/discogsResult', urlencodedParser, function (req, res) {
         return;
     }
     if (req.body.upload) {
-        res.render('pages/trackImageUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, image: "all" })
+        res.render('pages/trackImageUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, discogs: discogsResult, image: "all" })
         return;
     }
     discogsInput(res)
@@ -1439,15 +1436,15 @@ app.post('/trackImageUpload', urlencodedParser, function (req, res) {
     //     getImageFilesFromUser(req, res)
     //     return
     // } else
-    //     res.render('pages/audioCapture', {pageInfo:pageInfo, settings:settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "all.wav: " + getAudioCaptureSize(), audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, getPara: true,   vol: settings.jackVolume, settings:settings })
+    //     res.render('pages/audioCapture', {pageInfo:pageInfo, settings:settings, recSide: recSide, page: "normal", btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "all.wav: " + getAudioCaptureSize(), audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, settings:settings })
 })
 
 
 app.post('/discogsInput', urlencodedParser, function (req, res) {
     console.log(rememberDB + "*** Url: " + req.url + " body:" + JSON.stringify(req.body));
     if (req.body.editInfo){
-        //res.render('pages/trackImageUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, image: "all" })
-        res.render('pages/audioUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, image: "all" })
+        //res.render('pages/trackImageUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, discogs: discogsResult, image: "all" })
+        res.render('pages/audioUpload', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, discogs: discogsResult, image: "all" })
         return;
     }
     if (req.body.Artist) 
@@ -1509,7 +1506,7 @@ app.post('/youtube', urlencodedParser, function (req, res) {
     }
 
     if (req.body.mediatheksearch) {
-        res.render('pages/youtube', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, mediathekSearchItem: req.body.mediatheksearch })
+        res.render('pages/youtube', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus})
     }
 
     if (req.body.url && req.body.title) {
@@ -1526,7 +1523,7 @@ app.post('/youtube', urlencodedParser, function (req, res) {
                 downloadYTconvertMp3(req.body.url, "", "Yes")
                 procStatus.text = ""
                 SSEIntervalTyp = constants.SSE_DL_RUNNING
-                res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, progress: " ", ip: settings.ip, sysdir: settings.installDir })
+                res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, ip: settings.ip, sysdir: settings.installDir })
             }
             else
                 setInitialPage(res)
@@ -1541,7 +1538,7 @@ app.post('/youtube', urlencodedParser, function (req, res) {
         return
     }
 
-    res.render('pages/youtube', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, mediathekSearchItem: "" })
+    res.render('pages/youtube', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus})
 })
 
 app.post('/youtubeselect', urlencodedParser, function (req, res) {
@@ -1552,7 +1549,7 @@ app.post('/youtubeselect', urlencodedParser, function (req, res) {
     if (req.body.Back && !req.body.ytsearch) {
         if (req.body.Back.match("youtube")) {
             res.render('pages/youtubeselect', {vol:volumeAudioOut, play:"", settings:settings, searchYouTube: searchYouTube, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), 
-            pState: procStatus, yttitle:ytTitle, ytVideoId:ytVideoId, ytFound: ytFound, mediathekSearchItem: ""})
+            pState: procStatus, yttitle:ytTitle, ytVideoId:ytVideoId, ytFound: ytFound})
             return
         }
         pageInfo="Music"
@@ -1562,7 +1559,7 @@ app.post('/youtubeselect', urlencodedParser, function (req, res) {
     }
 
     if (req.body.mediatheksearch) {
-        res.render('pages/youtubeselect', {vol:volumeAudioOut, play:"", settings:settings, searchYouTube: searchYouTube, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, yttitle: "", ytFound: 0, mediathekSearchItem: req.body.mediatheksearch })
+        res.render('pages/youtubeselect', {vol:volumeAudioOut, play:"", settings:settings, searchYouTube: searchYouTube, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, yttitle: "", ytFound: 0})
 
     }
 
@@ -1580,7 +1577,7 @@ app.post('/youtubeselect', urlencodedParser, function (req, res) {
                 downloadYTconvertMp3(req.body.url, "", "Yes")
                 procStatus.text = ""
                 SSEIntervalTyp = constants.SSE_DL_RUNNING
-                res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, progress: " ", ip: settings.ip, sysdir: settings.installDir })
+                res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, ip: settings.ip, sysdir: settings.installDir })
             }
             else
                 setInitialPage(res)
@@ -1638,7 +1635,7 @@ app.post('/dlProgress', urlencodedParser, function (req, res) {
         let data = fs.readFileSync('help/listRadio.txt',"utf8")
             // if (err) {
             //     console.error(err)
-            //     res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, dir: 0, indexStart: 0, loc: "Video", vidsrc: "0", vol: settings.jackVolume})
+            //     res.render('pages/showMusicWorld',{pageInfo:pageInfo, settings:settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, basetracks: allTracks, dirMain: 0, loc: "Video", vol: settings.jackVolume})
             // }
             // else {
                 all = data.toString();
@@ -1686,7 +1683,7 @@ app.post('/showVideo', urlencodedParser, function (req, res) {
 //     }
 //     if ((req.body.email) || (req.body.Save == "Yes")) {
 //         if (SSEIntervalTyp.match(constants.SSE_DL_RUNNING)) {
-//             res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, progress: " ", ip: settings.ip, sysdir: settings.installDir })
+//             res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, ip: settings.ip, sysdir: settings.installDir })
 //             return
 //         }
 //         if (req.body.Save) {
@@ -1699,12 +1696,12 @@ app.post('/showVideo', urlencodedParser, function (req, res) {
 //         downloadYTconvertMp3(ytUrl[indexYT], indexYT, req.body.email, req.body.Save)
 //         procStatus.text = ""
 //         SSEIntervalTyp = constants.SSE_DL_RUNNING
-//         res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, progress: " ", ip: settings.ip, sysdir: settings.installDir })
+//         res.render('pages/dlProgress', { btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, ip: settings.ip, sysdir: settings.installDir })
 //         return
 //     }
 //     procStatus.text = "not saved, no valid email"
 //     res.render('pages/youtubeselect', {vol:volumeAudioOut, play:"", settings:settings, searchYouTube: searchYouTube, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), 
-//     pState: procStatus, yttitle: ytTitle, ytVideoId:ytVideoId, mediathekSearchItem: ""})
+//     pState: procStatus, yttitle: ytTitle, ytVideoId:ytVideoId})
 // })
 
 
@@ -1771,14 +1768,12 @@ app.post('/radioStation', urlencodedParser, async function (req, res) {
         res.render('pages/radioStation', {pageInfo:pageInfo,
             dat: totalStations, search:radioUserSearch, rd:pageStations,
             btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-            pState: procStatus, rec: getRadioRec(),
+            pState: procStatus,
             settings:settings,
             vol: volumeAudioOut,
             play: radioPlayIndex,
             stationOffset: 0,
-            hasMoreStations: visibleCount < totalStations || (Array.isArray(radioRawCandidates) && radioValidatedUpTo < radioRawCandidates.length),
-            nextOffset: visibleCount
-        });
+            hasMoreStations: visibleCount < totalStations || (Array.isArray(radioRawCandidates) && radioValidatedUpTo < radioRawCandidates.length)});
         return;
     }
     if (Object.keys(req.body.country)) {
@@ -2174,7 +2169,7 @@ app.post('/system', urlencodedParser, async function (req, res) {
                 res.render('pages/radioStation', {pageInfo:pageInfo,
                     dat: stationCount, search:radioUserSearch, rd:radioFound,
                     btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-                    pState: procStatus, rec: getRadioRec(),
+                    pState: procStatus,
                     settings:settings,
                     vol: volumeAudioOut,
                     settings:settings,
@@ -2230,7 +2225,7 @@ app.post('/system', urlencodedParser, async function (req, res) {
     if (req.body.MP4codecs) {
         procStatus.text = ""
         SSEIntervalTyp = constants.SSE_VIDEO_CONVERSION
-        res.render('pages/videoConvertProgress', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, progress: " ", ip: settings.ip, sysdir: settings.installDir })
+        res.render('pages/videoConvertProgress', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, ip: settings.ip, sysdir: settings.installDir })
         convertImproperVideos()
         return
     }
@@ -2248,7 +2243,7 @@ app.get('/agb', function (req, res) {
 
 app.get('/howto', function (req, res) {
     console.log("rememberDB="+rememberDB + " " + req.url + ", body:" + JSON.stringify(req.body))
-    res.render('pages/howto', {pageInfo:pageInfo, sysdir: settings.installDir, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "" });
+    res.render('pages/howto', {pageInfo:pageInfo, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: "" });
     //pipewireAudioInit()
 });
 

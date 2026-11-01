@@ -50,16 +50,14 @@ module.exports = function (required) {
     if (res) res.render('pages/youtubeselect', {
       vol: volumeAudioOut, play: "", settings: settings, searchYouTube: searchYouTube, btDevice: bluez,
       recording: getScheduledJobsWithoutTimeout(), pState: procStatus, yttitle: [], ytVideoId: [],
-      ytFound: 0, mediathekSearchItem: ""
-    })
+      ytFound: 0})
   },
   this.downloadYT = async function (url, res, title) {
     procStatus.text = "Feature disabled in this BASIS build"
     if (res) res.render('pages/youtubeselect', {
       vol: volumeAudioOut, play: "", settings: settings, searchYouTube: searchYouTube, btDevice: bluez,
       recording: getScheduledJobsWithoutTimeout(), pState: procStatus, yttitle: ytTitle, ytVideoId: ytVideoId,
-      ytFound: ytFound, mediathekSearchItem: ""
-    })
+      ytFound: ytFound})
   },
   this.removePart = function () {
     //no-op

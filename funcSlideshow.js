@@ -10,7 +10,7 @@ global.allVids = ""
 
 module.exports = function () {
   this.showPicDir = async function (res) {
-    res.render('pages/picvids', { pageInfo: pageInfo, vol: volumeAudioOut, settings: settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, dirs: [] })
+    res.render('pages/picvids', { pageInfo: pageInfo, settings: settings, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, dirs: [] })
   },
   this.endSlideShow = function () {
     //no-op (kept as a harmless callable used by generic navigation cleanup)

@@ -61,7 +61,7 @@ module.exports = function (required) {
 		return false
 	},
 	this.getImageFilesFromUser = async function (req, res) {
-		if (res) res.render('pages/audioCapture', { pageInfo: pageInfo, settings: settings, silenceFacor: silenceFactor, recSide: recSide, page: "normal", storage: storage, btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, getPara: false, vol: settings.jackVolume, settings: settings })
+		if (res) res.render('pages/audioCapture', { pageInfo: pageInfo, settings: settings, recSide: recSide, page: "normal", btDevice: bluez, recording: getScheduledJobsWithoutTimeout(), pState: procStatus, audioInfo: progressInfo, discogs: discogsResult, recAD: recAD, userSave: adjustRenameState.userCheck, settings: settings })
 	},
 	this.getDiscogsHistory = async function () {
 		//no-op (kept as a callable no-op for System diagnostics compatibility)

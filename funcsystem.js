@@ -643,7 +643,7 @@ async function setInitPage(res){
             res.render('pages/radioStation', {pageInfo:pageInfo,
                 dat: stationCount, search:radioUserSearch, rd:radioFound,
                 btDevice: bluez, recording: getScheduledJobsWithoutTimeout(),
-                pState: procStatus, rec: getRadioRec(),
+                pState: procStatus,
                 settings:settings,
                 vol: volumeAudioOut,
                 play: radioPlayIndex,
@@ -1045,9 +1045,8 @@ module.exports = function(required){
         if (res) {
             pageInfo = "System"
             res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, usb:usbState, mac:mac, updateCheck:updateCheck,
-            updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX,
-            info:SDData, sys:sysData.toString(), settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
-            treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, ipList:ipList, notice:notice})
+            updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX, sys:sysData.toString(), settings:settings,audio:audioInfo,
+            treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, notice:notice})
             }
         }
         catch(err){
@@ -1056,9 +1055,8 @@ module.exports = function(required){
             if (res) {
                 pageInfo = "System"
                 res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:err, usb:usbState, mac:mac, updateCheck:updateCheck,
-                updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX,
-                info:helpData, sys:sysData, settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
-                treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords,ipList:ipList, notice:notice})
+                updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX, sys:sysData, settings:settings,audio:audioInfo,
+                treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, notice:notice})
             }
         }
     },
@@ -2196,10 +2194,10 @@ module.exports = function(required){
     this.doSettings = async function (res, set){
         try{
             var currentHostname = (await execCmd("hostname >&1").catch(()=>"")).trim()
-            res.render('pages/systemSettings',{pageInfo:pageInfo,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings, hostname:currentHostname});
+            res.render('pages/systemSettings',{pageInfo:pageInfo, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, settings:settings, hostname:currentHostname});
         }
         catch (err){
-            res.render('pages/systemSettings',{pageInfo:pageInfo,resultTV:resultTV,sysdir:settings.installDir, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, vol:settings.jackVolume, settings:settings, hostname:""});
+            res.render('pages/systemSettings',{pageInfo:pageInfo, btDevice:bluez,recording:getScheduledJobsWithoutTimeout(), pState:procStatus, settings:settings, gateway:gateway, settings:settings, hostname:""});
         }
     }
     this.configSettings = async function (res,set){
