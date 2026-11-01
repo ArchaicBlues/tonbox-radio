@@ -37,19 +37,20 @@ are present in the UI but intentionally disabled as no-ops, marked with
 sudo apt update
 sudo apt install -y git npm
 
+# get the app
+git clone https://github.com/archaicblues/tonbox-media.git
+mv tonbox-media ArchaicNodeEJS
+cd ArchaicNodeEJS
+
 # passwordless sudo for this user - the app calls sudo in many places and
 # would otherwise hang on the first prompt once running unattended at boot
-# (replace "pi" with your actual username if different)
-echo "pi ALL=(ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/010_pi-nopasswd
-sudo chmod 440 /etc/sudoers.d/010_pi-nopasswd
+# (pass your username as an argument if it isn't "pi")
+bash bashScript/setupNopasswd.sh
 
 # system packages used by various features
 sudo apt install -y ffmpeg mpv alsa-utils bluez cd-discid imagemagick pipewire wireplumber
 
-# get the app and run it
-git clone https://github.com/archaicblues/tonbox-media.git
-mv tonbox-media ArchaicNodeEJS
-cd ArchaicNodeEJS
+# run it
 npm install
 node server.js
 ```
