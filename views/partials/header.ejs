@@ -231,6 +231,11 @@
   <!-- User / System Actions -->
   <div class="d-flex align-items-center gap-3">
       <button type="button" class="btn-modern icon-only" id="fullViewBtn" title="FullView" aria-label="Toggle FullView"><i class="bi bi-arrows-fullscreen"></i></button>
+      <span class="btn-modern icon-only"
+          title="<%= (typeof btDevice !== 'undefined' && btDevice) ? 'Bluetooth: verbunden' : 'Bluetooth: nicht verbunden' %>"
+          style="<%- (typeof btDevice !== 'undefined' && btDevice) ? 'color:#4da3ff;' : 'opacity:0.4;' %>">
+        <i class="bi bi-bluetooth"></i>
+      </span>
       <a href="/howto" class="btn-modern icon-only" title="Help"><i class="bi bi-question-circle"></i></a>
   </div>
 </nav>

@@ -107,6 +107,24 @@ systemctl --user daemon-reload
 systemctl --user enable --now Tonbox.service
 ```
 
+### Bluetooth speaker mode
+
+Two more unit files enable pairing a phone and streaming audio to the Tonbox
+over Bluetooth (A2DP), without needing the web UI open first:
+
+- [filter/conf/userServices/bt-agent.service](filter/conf/userServices/bt-agent.service)
+  runs a headless pairing agent (`bt-agent -c NoInputNoOutput`) so a phone can
+  pair without any interactive confirmation on the Tonbox itself.
+- [filter/conf/userServices/btConCheck.service](filter/conf/userServices/btConCheck.service)
+  watches `bluetoothctl` for a connected device and reflects that status as
+  the Bluetooth icon in the web UI's top bar.
+
+```bash
+cp filter/conf/userServices/bt-agent.service filter/conf/userServices/btConCheck.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now bt-agent.service btConCheck.service
+```
+
 
 ## License
 
