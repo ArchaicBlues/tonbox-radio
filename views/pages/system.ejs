@@ -222,6 +222,11 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
         <form action='../system', method='POST', content-type="text/javascript">
         <button class="btn-modern" type="submit" name="Back" value="Back"><i class="bi bi-arrow-left"></i> Back / Submit</button>
         <br><br>
+        <% if (typeof notice !== 'undefined' && notice) { %>
+            <div class="glass-panel p-3 mb-4" style="text-align:center; background:#5a1a1a; border:1px solid #ff4d4d;">
+                <b>⚠ <%- notice %></b>
+            </div>
+        <% } %>
         <hr style="border-color:rgb(236, 6, 6)">
         <div class="audio-system-card">
             <b>Set Audio System:</b>

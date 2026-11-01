@@ -1000,6 +1000,17 @@ module.exports = function(required){
         }
     },
     this.doSystem = async function (res){
+        //Einmalige Meldung aus doLAN()/wifiConfigInit() (z.B. "WLAN-IP konnte nicht gesetzt
+        //werden, da SSID/Passwort fehlen") - ueberlebt einen Reboot, da sie in eine Datei statt
+        //nur in den (beim Neustart verlorenen) In-Memory procStatus geschrieben wird. Wird nach
+        //dem Lesen geloescht, erscheint also nur einmal.
+        var notice = ""
+        try{
+            if (fs.existsSync("help/notice.txt")){
+                notice = fs.readFileSync("help/notice.txt", "utf8")
+                fs.unlinkSync("help/notice.txt")
+            }
+        }catch(err){}
     try{
         //await getIP()
         var mac = await getMacAddress()
@@ -1036,7 +1047,7 @@ module.exports = function(required){
             res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, usb:usbState, mac:mac, updateCheck:updateCheck,
             updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX,
             info:SDData, sys:sysData.toString(), settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
-            treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, ipList:ipList})
+            treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, ipList:ipList, notice:notice})
             }
         }
         catch(err){
@@ -1047,7 +1058,7 @@ module.exports = function(required){
                 res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:err, usb:usbState, mac:mac, updateCheck:updateCheck,
                 updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX,
                 info:helpData, sys:sysData, settings:settings,devAD:devADrecords,devRM:devHome,devYT:devMusic,audio:audioInfo,
-                treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords,ipList:ipList})
+                treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords,ipList:ipList, notice:notice})
             }
         }
     },
@@ -1992,8 +2003,20 @@ module.exports = function(required){
                     console.log(procStatus.text)
                     //nicht die richtige IP - benutze SSID und Pass aus ".settings.conf"
                     //modifiziere Tonbox.nmcommunicate Datei
-                    await wifiConfigInit()
+                    var wlanIpOk = await wifiConfigInit()
                     rebootRequired = true
+                    if (wlanIpOk === false){
+                        //wifiConfigInit() ist genau an der SSID/Passwort-Pruefung gescheitert
+                        //(nicht an einem sonstigen nmcli-Fehler) - Nutzer hat also wirklich eine
+                        //neue IP angefordert, aber WLAN ist nicht konfiguriert. Ueberlebt den
+                        //gleich folgenden Reboot (durch die eth0-Aenderung), da procStatus bis
+                        //dahin schon verloren waere - siehe doSystem().
+                        try{
+                            fs.writeFileSync("help/notice.txt", "WLAN-IP konnte nicht auf " + settings.ip +
+                                " geaendert werden: Es sind keine WLAN-Zugangsdaten (SSID/Passwort) konfiguriert. " +
+                                "Bitte zuerst unter System -> Wi-Fi Configuration eintragen, danach die IP erneut setzen.")
+                        }catch(err){}
+                    }
                 }
                 else { //should be ok
 //                     ip_config = true
@@ -2072,7 +2095,7 @@ module.exports = function(required){
             if (!(settings.ssid && settings.pass && settings.ip)){
                 await logging("missing ip, ssid, pass ...")
                 procStatus.text +=" + WLAN inactive, you may configure it"
-                return
+                return false
             }
             console.log("wifiConfigInit: ip =" + settings.ip + " SSID="+settings.ssid +" Pass="+settings.pass)
             await logging("wifiConfigInit: ip =" + settings.ip + " SSID="+settings.ssid +" Pass="+settings.pass)
@@ -2124,6 +2147,7 @@ module.exports = function(required){
             // bring connection up
             await execCmd("sudo nmcli con up Tonbox >&1")
             ping_required = true
+            return true
         }
         catch(err){
             console.log("wifiConfigInit: " + err)
