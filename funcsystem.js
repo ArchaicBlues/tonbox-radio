@@ -1507,11 +1507,18 @@ module.exports = function(required){
     }
     this.rebootSystem = function(){
         console.log("reboot system...")
-        exec('sudo reboot', (error, stdout, stderr) => {})
+        //Fehler (z.B. "sudo" haengt mangels NOPASSWD an einem Passwort-Prompt) wurden
+        //bisher komplett verschluckt - das Geraet startet dann nie neu, aber nirgends
+        //steht auch nur ein Hinweis darauf im Log.
+        exec('sudo reboot', (error, stdout, stderr) => {
+            if (error) console.log("rebootSystem: " + error + (stderr ? " stderr=" + stderr : ""))
+        })
     },
     this.shutdownSystem = function(){
         console.log("shutdown system, good-bye...")
-        exec('sudo init 0', (error, stdout, stderr) => {})
+        exec('sudo init 0', (error, stdout, stderr) => {
+            if (error) console.log("shutdownSystem: " + error + (stderr ? " stderr=" + stderr : ""))
+        })
     },
     this.sendSSE = function(sse){
         /*
