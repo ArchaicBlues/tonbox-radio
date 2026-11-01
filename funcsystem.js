@@ -634,7 +634,6 @@ function readData(f){
 
 async function setInitPage(res){
     try{
-        await loadRadioHistory("")
         await loadRadioSearch() //fill radioFound {}
         await loadYouTubeSearch()
         if((devHome != "nok") && (devMusic != "nok") && (devADrecords != "nok")){
@@ -1823,7 +1822,7 @@ module.exports = function(required){
             }
             //wenn Benutzer nichts eingegeben hat
             if (!ssid || !pass){
-                var wifi = await execCmd("nmcli con show | grep wlan0 >&1")
+                var wifi = await execCmd("nmcli con show | grep wlan0 >&1 || true")
                 if (wifi){
                     doSystem(res)
                     return
@@ -1840,7 +1839,10 @@ module.exports = function(required){
             }
             console.log("SSID="+ ssid)
 
-            result = await execCmd("ls /etc/NetworkManager/system-connections/ | grep Tonbox.nmconnection >&1")
+            //"|| true": grep findet auf einem frischen Geraet (noch kein "Tonbox"-Profil)
+            //nichts und beendet sich mit Exit-Code 1 - ohne "|| true" wertet execCmd() das
+            //als Fehler und wirft, statt "result" einfach leer zu lassen (siehe if/else unten).
+            result = await execCmd("ls /etc/NetworkManager/system-connections/ | grep Tonbox.nmconnection >&1 || true")
             if (result){
                 cmd = "sudo nmcli con modify Tonbox ifname wlan0 type wifi ssid '"+ssid+"' ipv4.addresses " + settings.ip + "/24 ipv4.method manual"
             }
