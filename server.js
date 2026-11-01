@@ -449,10 +449,6 @@ app.get('/entry', function (req, res) {
         setCardVolume(vol)
         break;
 
-        case "shutdown":
-        shutdownSystem()
-        break;
-
         case "video":
         rememberDB = "Video"
         pageInfo = "Video"
@@ -2229,6 +2225,7 @@ app.post('/system', urlencodedParser, async function (req, res) {
     }
     if (req.body.sys == "SHUTDOWN") {
         shutdownSystem()
+        return;
     }
     if (req.body.MP4codecs) {
         procStatus.text = ""

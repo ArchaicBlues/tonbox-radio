@@ -440,7 +440,15 @@
 
               // Jetzt bewusst verzögert den Request senden
               setTimeout(() => {
-                  window.location.href = "/entry?src=shutdown";
+                  // POST statt Navigation auf eine GET-Aktions-URL: Letztere würde in
+                  // Browser-History/-Cache (Zurück-Button, wiederhergestellter Tab, ...)
+                  // landen und beim naechsten Boot den Shutdown sofort erneut ausloesen,
+                  // ohne dass der Kunde je geklickt hat - das Geraet wirkt dann "defekt".
+                  fetch("/system", {
+                      method: "POST",
+                      headers: {"Content-Type": "application/x-www-form-urlencoded"},
+                      body: "sys=SHUTDOWN"
+                  }).catch(() => {});
               }, 1500); // leicht erhöht, damit UI sichtbar ist
           });
       });
