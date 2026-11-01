@@ -2230,7 +2230,10 @@ module.exports = function(required){
                 if(num){
                     if ((num >=10) && (num <= 254)){
                         var newIp = ip3Prefix + "." + set.ip
-                        if (!ipList[1].match(newIp) || (!ipList[2].match(newIp))){
+                        //.includes() statt .match(): newIp ist eine blosse IP-Zeichenkette,
+                        //kein Regex-Muster - mit .match() wuerden die Punkte als "ein beliebiges
+                        //Zeichen" interpretiert statt als literale Punkte.
+                        if (!ipList[1].includes(newIp) || (!ipList[2].includes(newIp))){
                             if (settings.ip !== newIp) ipChanged = true
                             settings.ip = newIp
                             await writeSettings()
@@ -2273,6 +2276,7 @@ module.exports = function(required){
             }
             await writeSettings()
 
+            console.log("configSettings: ipList="+JSON.stringify(ipList)+" settings.ip="+settings.ip+" settings.gateway="+settings.gateway+" ipChanged="+ipChanged)
             if (ipChanged){
                 //Antwort zuerst raussenden: doLAN(true) wendet die neue IP/Gateway per nmcli an
                 //und rebootet am Ende selbst (sudo reboot), wenn sich dadurch etwas geaendert
@@ -2300,6 +2304,7 @@ module.exports = function(required){
             doSystem(res)
         }
         catch(err){
+            console.log("configSettings: " + err)
             procStatus.text += " configSettings: " + err
             doSystem(res)
         }
