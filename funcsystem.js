@@ -2189,6 +2189,9 @@ module.exports = function(required){
             var gwOctets = (ipList[0] || "").split(".")
             var ip3Prefix = (gwOctets.length === 4) ? gwOctets.slice(0,3).join(".") : "192.168.2"
             var gw2Prefix = (gwOctets.length === 4) ? gwOctets.slice(0,2).join(".") : "192.168"
+            //Ob sich IP/Gateway durch diesen Submit tatsaechlich aendern - nur dann muss
+            //doLAN(true) (siehe unten) etwas anwenden/neu starten.
+            var ipChanged = false
 
             if(set.ip){
                 var num = parseInt(set.ip,10)
@@ -2196,14 +2199,9 @@ module.exports = function(required){
                     if ((num >=10) && (num <= 254)){
                         var newIp = ip3Prefix + "." + set.ip
                         if (!ipList[1].match(newIp) || (!ipList[2].match(newIp))){
+                            if (settings.ip !== newIp) ipChanged = true
                             settings.ip = newIp
                             await writeSettings()
-                            if (settings.ssid && settings.pass){
-                                // doLAN(true)
-                                // doSystem(res)
-                                // return
-                            }else
-                                procStatus.text = "SSID und Passwort fehlt"
                         }
                     }
                 }
@@ -2216,12 +2214,27 @@ module.exports = function(required){
                     var b = parseInt(data[1],10)
                     if (a && b){
                         if ((a > 0) && (a <= 254) && (b > 0) && (b <= 254)){
-                            settings.gateway = gw2Prefix+"."+data[0]+"."+data[1]
+                            var newGateway = gw2Prefix+"."+data[0]+"."+data[1]
+                            if (settings.gateway !== newGateway) ipChanged = true
+                            settings.gateway = newGateway
                         }
                     }
                 }
             }
             await writeSettings()
+
+            if (ipChanged){
+                //Antwort zuerst raussenden: doLAN(true) wendet die neue IP/Gateway per nmcli an
+                //und rebootet am Ende selbst (sudo reboot), wenn sich dadurch etwas geaendert
+                //hat - wuerde die Antwort erst danach kommen, haenge der Request bis zum
+                //Reboot und der Browser zeigt nur einen Timeout.
+                procStatus.text = "Neue IP/Gateway werden uebernommen, Geraet startet jetzt neu..."
+                await doSystem(res)
+                doLAN(true).catch(err => {
+                    console.log("configSettings: doLAN fehlgeschlagen: " + err)
+                })
+                return
+            }
 
             // if (set.mailhub && set.mailUser && set.mailPass){
             //     ssmtp = set.mailhub
