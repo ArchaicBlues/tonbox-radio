@@ -1873,31 +1873,42 @@ module.exports = function(required){
             //"|| true": grep findet auf einem frischen Geraet (noch kein "Tonbox"-Profil)
             //nichts und beendet sich mit Exit-Code 1 - ohne "|| true" wertet execCmd() das
             //als Fehler und wirft, statt "result" einfach leer zu lassen (siehe if/else unten).
+            //Ohne jemals ueber "IP, Gateway, Hostname" eine feste IP gesetzt zu haben, ist
+            //settings.ip leer - "ipv4.addresses /24" (ohne Adresse davor) ist fuer nmcli
+            //eine ungueltige IPv4-Adresse und bricht den ganzen Befehl ab. Nur dann auf
+            //ipv4.method manual + feste Adresse bestehen, wenn tatsaechlich eine gesetzt ist -
+            //sonst ganz normal per DHCP verbinden.
+            var ipArgs = settings.ip ? ("ipv4.addresses " + settings.ip + "/24 ipv4.method manual") : "ipv4.method auto"
             result = await execCmd("ls /etc/NetworkManager/system-connections/ | grep Tonbox.nmconnection >&1 || true")
             if (result){
-                cmd = "sudo nmcli con modify Tonbox ifname wlan0 type wifi ssid '"+ssid+"' ipv4.addresses " + settings.ip + "/24 ipv4.method manual"
+                cmd = "sudo nmcli con modify Tonbox ifname wlan0 type wifi ssid '"+ssid+"' " + ipArgs
             }
             else
-                cmd = "sudo nmcli con add con-name Tonbox ifname wlan0 type wifi ssid '"+ssid+"' ipv4.addresses " + settings.ip + "/24 ipv4.method manual"
-            console.log(cmd)                    
+                cmd = "sudo nmcli con add con-name Tonbox ifname wlan0 type wifi ssid '"+ssid+"' " + ipArgs
+            console.log(cmd)
             await execCmd(cmd)
             await editConTonbox()
             cmd = "sudo nmcli con reload"
-            console.log(cmd)                    
+            console.log(cmd)
             await execCmd(cmd)
-            //wichtig für Radio-Streams  "mpv https://playerservice..."
-            cmd = "sudo nmcli con modify Tonbox ipv4.dns "+ settings.gateway// + " ipv4.gateway "+settings.gateway
-            console.log(cmd)                    
-            await execCmd(cmd)
+            //wichtig für Radio-Streams  "mpv https://playerservice..." - nur sinnvoll, wenn
+            //ueberhaupt ein Gateway bekannt ist (siehe ipArgs oben)
+            if (settings.gateway){
+                cmd = "sudo nmcli con modify Tonbox ipv4.dns "+ settings.gateway// + " ipv4.gateway "+settings.gateway
+                console.log(cmd)
+                await execCmd(cmd)
+            }
 
             cmd = "sudo nmcli con modify Tonbox wifi-sec.key-mgmt wpa-psk; \
                    sudo nmcli con modify Tonbox wifi-sec.psk " + pass
-            console.log(cmd)                    
+            console.log(cmd)
             await execCmd(cmd)
 
             await execCmd("sudo nmcli connection modify 'Tonbox' connection.autoconnect-priority 0 >&1")
             await execCmd("sudo nmcli connection modify 'Wired connection 1' connection.autoconnect-priority 10 >&1")
-            await execCmd("sudo nmcli connection modify 'Tonbox' ipv4.method manual >&1")
+            if (settings.ip){
+                await execCmd("sudo nmcli connection modify 'Tonbox' ipv4.method manual >&1")
+            }
 
             cmd = "sudo nmcli con up Tonbox"
             console.log(cmd)                    
