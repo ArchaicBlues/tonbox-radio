@@ -1983,18 +1983,24 @@ module.exports = function(required){
                     procStatus.text = "eth0 ip change: "+settings.ip + " required"
                     await logging(procStatus.text)
                     console.log(procStatus.text)
+                    //ipv4.method manual ist Pflicht, nicht nur Beiwerk: ohne das bleibt die
+                    //Verbindung im DHCP-Modus ("auto") - die manuell gesetzte ipv4.addresses
+                    //kommt dann ZUSAETZLICH zur DHCP-Adresse dazu, statt sie zu ersetzen, und
+                    //das Interface zeigt am Ende zwei IPs gleichzeitig.
+                    cmd = "sudo nmcli conn modify 'Wired connection 1' ipv4.addresses " + settings.ip +"/24 ipv4.method manual"
                     if (settings.gateway){
                         await logging("gateway="+settings.gateway)
-                        cmd = "sudo nmcli conn modify 'Wired connection 1' ipv4.addresses " + settings.ip +"/24 \
-                        ipv4.gateway "+settings.gateway+" ipv4.dns "+settings.gateway+" ipv4.method manual; sudo nmcli con reload"
+                        cmd += " ipv4.gateway "+settings.gateway+" ipv4.dns "+settings.gateway
                     }else{
                         await logging("no gateway detected")
                         console.log("no gateway detected")
                     }
-                    cmd = "sudo nmcli conn modify 'Wired connection 1' ipv4.addresses " + settings.ip +"/24"
                     console.log(cmd)
                     await execCmd(cmd)
-                    await execCmd("sudo nmcli con 'Wired connection 1' reload;sudo nmcli con up 'Wired connection 1'")
+                    //down+up statt reload+up: eine bereits aktive Verbindung nur "reload"en/
+                    //erneut "up"zubringen erzwingt keine vollstaendige Neuvergabe - eine zuvor
+                    //per DHCP vergebene Adresse kann als stale "secondary" IP haengen bleiben.
+                    await execCmd("sudo nmcli con down 'Wired connection 1'; sudo nmcli con up 'Wired connection 1'")
                     await logging("etho with gateway="+settings.gateway+", ip="+settings.ip+" configured")
                     rebootRequired = true
                 }
