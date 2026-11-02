@@ -158,7 +158,7 @@ var SDcardMediaServer=constants.SD_CARD_MEDIASERVER_NOK
 //let constants = require('./defines.js');
 
 global.bluez = ""
-global.monSys = {temp:"",space:""}
+global.monSys = {temp:"",space:"",mem:""}
 
 // Bluetooth-Audio kommt beim Verbinden mit ungedaempftem PipeWire-Volume
 // (100%) an, wird aber gegenueber dem Radiostream trotzdem als sehr leise
@@ -240,6 +240,16 @@ async function monitorFreeSpace() {
     if(s <= 1) {
         if (!procStatus.text.includes("*** WARNUNG: Speicherplatz < 1G ! ***"))
             procStatus.text += "*** WARNUNG: Speicherplatz < 1G ! ***"
+    }
+}
+async function monitorFreeMemory() {
+    monSys.mem = await execCmd("free -m | awk 'NR==2 {print $4}'")
+    console.log(monSys)
+    // Behält nur Ziffern und Punkte, entfernt alles andere
+    const m = Number(monSys.mem.match(/-?\d+(\.\d+)?/));
+    if(m <= 100) {
+        if (!procStatus.text.includes("*** WARNUNG: Freier Hauptspeicher < 100MB ! ***"))
+            procStatus.text += "*** WARNUNG: Freier Hauptspeicher < 100MB ! ***"
     }
 }
 
@@ -692,6 +702,7 @@ module.exports = function(required){
         setInterval(doMonitorBT, 1500);
         setInterval(monitorTemperatur, 15000);
         setInterval(monitorFreeSpace, 20000);
+        setInterval(monitorFreeMemory, 20000);
         refreshHostname()
     },
     this.ledOrange = function(turn){

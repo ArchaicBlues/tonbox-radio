@@ -104,6 +104,14 @@ it can't be selected automatically at runtime. Common HATs:
 | JustBoom DAC / Amp | `justboom-dac` |
 | WM8960-based boards (e.g. Waveshare) | `wm8960-soundcard` |
 
+Also disable the onboard audio in the same `[all]` section, so it doesn't
+compete with the HAT:
+
+```
+# Onboard-Audio abschalten (Zeile auskommentieren bzw. auf off setzen)
+dtparam=audio=off
+```
+
 Check `cat /proc/asound/cards` after rebooting to confirm the HAT shows up as
 its own card (besides `Headphones` and `vc4hdmi*`), then select it as the
 audio output from the web UI.
