@@ -122,12 +122,12 @@ module.exports = async function(required){
         }catch(err){/* Datei existiert auf diesem Geraet evtl. nicht - ignorieren */}
       }
       if (changed){
-        //wireplumber mit-neustarten, nicht nur pipewire: wireplumber verwaltet Sessions/
-        //Policy (welcher Sink Default ist etc.) - ein reiner pipewire-Neustart alleine hat
-        //sich an anderer Stelle im Code (funcAudio.js) bereits als nicht ausreichend
-        //gezeigt, dort wird konsequent "pipewire wireplumber" zusammen neu gestartet.
-        await execCmd("systemctl --user restart pipewire wireplumber")
-        await new Promise(r => setTimeout(r, 3000))
+        //KEIN automatischer Neustart hier: pipewireAudioInit() (und damit diese Funktion)
+        //kann auch waehrend laufender Wiedergabe aufgerufen werden - ein Neustart von
+        //pipewire/wireplumber mitten im Stream reisst die Audio-Verbindung ab, ohne dass
+        //danach irgendetwas die Wiedergabe neu verbindet ("kein Sound" live beobachtet).
+        //Die Config ist jetzt korrigiert, greift aber erst nach einem manuellen Neustart.
+        console.log("fixEqualizerTarget: node.target korrigiert - wird erst nach einem Neustart (Reboot) wirksam")
       }
     }catch(err){
       console.log("fixEqualizerTarget: " + err)
