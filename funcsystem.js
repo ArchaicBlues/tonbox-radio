@@ -1477,14 +1477,13 @@ module.exports = function(required){
     },
     this.writeMediaSettings = async function (dev){
         try {
-            var dat = await execCmd("cat .settings.conf >&1")
-            var dat = JSON.parse(dat)
+            //War bisher ein "cat .settings.conf" per Shell (relativer Pfad, haengt vom
+            //Working Directory des Prozesses ab) nur um mediaOut zu vergleichen - "settings"
+            //haelt denselben Wert schon im Speicher, ein erneutes Einlesen der Datei war
+            //ueberfluessig und fehleranfaellig.
             let save = false
-            if (!dat.mediaOut.match(dev)){
-                dat.mediaOut = dev
+            if (!settings.mediaOut.match(dev)){
                 settings.mediaOut = dev
-                // var data = JSON.stringify(dat)
-                // fs.writeFileSync('.settings.conf', data)
                 await writeSettings()
             }
         }
@@ -2597,17 +2596,27 @@ module.exports = function(required){
         return false;
     },
     this.writeSettings = async function(){
+        //Absoluter Pfad statt relativ: ein relativer Pfad haengt am aktuellen Working
+        //Directory des Node-Prozesses - weicht das (aus welchem Grund auch immer) vom
+        //Projektverzeichnis ab, schreibt/liest dies eine KOMPLETT ANDERE Datei, voellig
+        //unbemerkt (siehe loadSettings() unten: ENOENT wurde bisher sogar explizit
+        //verschluckt), und saemtliche Settings (ip, gateway, ssid, ...) bleiben bei den
+        //JS-Defaults haengen - genau das live beobachtete "settings.ip=" leer beim Boot.
         var data = JSON.stringify(settings)
-        await fsPromises.writeFile('.settings.conf', data)
+        await fsPromises.writeFile(path.join(__dirname, '.settings.conf'), data)
         //console.log(data)
     },
     this.loadSettings = async function(){
         try {
-            var data = await fsPromises.readFile('.settings.conf', 'utf8')
+            var data = await fsPromises.readFile(path.join(__dirname, '.settings.conf'), 'utf8')
             Object.assign(settings, JSON.parse(data))
         }
         catch (err) {
-            if (err.code !== 'ENOENT') console.log(err)
+            //ENOENT ist beim allerersten Start (noch keine .settings.conf) erwartet,
+            //aber nicht mehr stillschweigend verschlucken - sonst sieht man im Log nicht,
+            //wenn das aus einem ANDEREN Grund (falsches Working Directory, Rechte, ...)
+            //bei JEDEM Start passiert und settings dauerhaft bei den Defaults bleibt.
+            console.log("loadSettings: " + err)
         }
     },
     this.checkTV = async function(res){
