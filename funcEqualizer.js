@@ -42,17 +42,24 @@ function spawnAsync(cmd, args = []) {
 
 module.exports = async function(required){
   this.findEqualizerSinkLine = async function(){
-    //"Equalizer Tonbox Sink" kann kurz nach einem PipeWire-Neustart (Reverb-Toggle,
-    //Sender-Wechsel - siehe ensureMpvRestarted() in funcRadio.js) voruebergehend
-    //fehlen, waehrend die Filter-Kette neu lädt. Kurz retrien statt sofort leer
-    //zurückzugeben - ein fehlender Treffer liesse EQ-Befehle sonst stillschweigend
-    //ins Leere laufen (siehe modifyFilterOnTheFly()/submitFilter()).
+    //War bisher eine Suche nach "Equalizer Tonbox Sink" (node.description/media.name aus
+    //tonboxFilter.conf) - "wpctl status" zeigt Knoten aber unter ihrem node.name ("eq10",
+    //siehe capture.props in tonboxFilter.conf), NICHT unter node.description/media.name.
+    //Dieser Text kommt in "wpctl status" also NIE vor - der Filter-Chain-Sink hat dadurch
+    //immer als "nicht gefunden" gegolten, obwohl er (Filters-Sektion in wpctl status)
+    //tatsaechlich laeuft; wpctl set-default wurde deshalb nie auf ihn aufgerufen, Audio
+    //blieb am eigentlichen Default-Sink vorbei am Equalizer.
+    //
+    //"eq10" kann kurz nach einem PipeWire-Neustart (Reverb-Toggle, Sender-Wechsel - siehe
+    //ensureMpvRestarted() in funcRadio.js) voruebergehend fehlen, waehrend die Filter-Kette
+    //neu lädt. Kurz retrien statt sofort leer zurückzugeben - ein fehlender Treffer liesse
+    //EQ-Befehle sonst stillschweigend ins Leere laufen (siehe modifyFilterOnTheFly()/submitFilter()).
     for (let i=0; i<10; i++){
-      let line = await execCmd('wpctl status 2>/dev/null | grep "Equalizer Tonbox Sink" || true')
+      let line = await execCmd('wpctl status 2>/dev/null | grep "\\. eq10 " || true')
       if (line && line.trim()) return line
       await new Promise(r => setTimeout(r, 300))
     }
-    console.log("findEqualizerSinkLine: 'Equalizer Tonbox Sink' nach 3s nicht gefunden")
+    console.log("findEqualizerSinkLine: 'eq10' nach 3s nicht gefunden")
     return ""
   },
   this.fixEqualizerTarget = async function(){
@@ -453,8 +460,13 @@ module.exports = async function(required){
         result = await findEqualizerSinkLine()
       }
       if (result){
-        result = result.split(". Equalizer Tonbox Sink")
-        eq = result[0].slice(-2,result[0].length)
+        //Wie modifyFilterOnTheFly()/submitFilter(): auf "." splitten (nicht auf die
+        //frueher gesuchte, nie vorkommende ". Equalizer Tonbox Sink") und das letzte durch
+        //Leerzeichen getrennte Token vor dem ersten Punkt nehmen - das ist die ID-Nummer
+        //("      36. eq10 ..." -> "36"), unabhaengig von ihrer Ziffernanzahl.
+        result = result.split(".")
+        let idParts = result[0].split(" ")
+        eq = idParts[idParts.length-1]
       }
       console.log("eq Object ID = "+ eq )//+ ", au ID = " + au + ", au2 ID =" + au2)
       //Equalizer immer setzen wenn vorhanden
