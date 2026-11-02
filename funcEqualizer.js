@@ -55,6 +55,66 @@ module.exports = async function(required){
     console.log("findEqualizerSinkLine: 'Equalizer Tonbox Sink' nach 3s nicht gefunden")
     return ""
   },
+  this.fixEqualizerTarget = async function(){
+    //tonboxFilter.conf/tonbox.txt/tonbox_All.txt haben "node.target" bisher hart auf
+    //die Onboard-Audio des urspruenglichen Dev-Geraets kodiert
+    //("alsa_output.platform-fe00b840.mailbox.stereo-fallback"). Auf jedem Geraet mit
+    //einem DAC-HAT (oder deaktivierter Onboard-Audio, siehe README) heisst dieser
+    //PipeWire-Knoten anders (z.B. "platform-soc_sound" beim Allo Boss) - das
+    //filter-chain-Modul laedt dann nie, "Equalizer Tonbox Sink" entsteht nie, egal wie
+    //oft findEqualizerSinkLine() nachfragt. Ermittelt den tatsaechlich aktiven
+    //alsa_output-Knoten per Ausschluss (gleiche Logik wie getAudioOut(): alles außer
+    //Headphones/HDMI) und schreibt ihn nur dann in die Config-Dateien, wenn er vom
+    //aktuell eingetragenen abweicht - danach PipeWire neu starten, damit es greift.
+    try{
+      var out = await execCmd("pw-cli ls Node 2>/dev/null | grep -A3 'alsa_output' || true")
+      var lines = out.split("\n")
+      var candidates = []
+      var current = null
+      for (var i=0; i<lines.length; i++){
+        var mName = lines[i].match(/node\.name\s*=\s*"([^"]+)"/)
+        var mNick = lines[i].match(/node\.nick\s*=\s*"([^"]*)"/)
+        if (mName){
+          if (current) candidates.push(current)
+          current = {name: mName[1], nick: ""}
+        }
+        if (mNick && current) current.nick = mNick[1]
+      }
+      if (current) candidates.push(current)
+      var target = null
+      for (var c of candidates){
+        if (!c.nick.match(/headphone|hdmi/i)){
+          target = c.name
+          break
+        }
+      }
+      if (!target) return //keine passende Ausgabe gefunden - nichts aendern, lieber nichts tun als raten
+
+      var confDir = "/home/pi/.config/pipewire/pipewire.conf.d"
+      var files = ["tonboxFilter.conf", "tonbox.txt", "tonbox_All.txt"]
+      var changed = false
+      for (var f of files){
+        try{
+          var filePath = confDir + "/" + f
+          var content = await fsPromises.readFile(filePath, "utf8")
+          var re = /node\.target\s*=\s*\S+/
+          var m = content.match(re)
+          if (m && m[0] !== "node.target = " + target && m[0] !== "node.target =  " + target){
+            var newContent = content.replace(re, "node.target =  " + target)
+            await fsPromises.writeFile(filePath, newContent, "utf8")
+            changed = true
+            console.log("fixEqualizerTarget: " + f + " node.target -> " + target)
+          }
+        }catch(err){/* Datei existiert auf diesem Geraet evtl. nicht - ignorieren */}
+      }
+      if (changed){
+        await execCmd("systemctl --user restart pipewire")
+        await new Promise(r => setTimeout(r, 2000))
+      }
+    }catch(err){
+      console.log("fixEqualizerTarget: " + err)
+    }
+  },
   this.setVolumeSettings = async function (value){
     console.log("setVolumeSettings="+value)
     settings.jackVolume = value
@@ -366,6 +426,14 @@ module.exports = async function(required){
       // d.h. pw-play spielt immer auf HAT-DAC, wenn vorhanden!
 
       result = await findEqualizerSinkLine()
+      if (!result){
+        //Sink nicht gefunden - bevor endgueltig aufgegeben wird, pruefen ob node.target
+        //auf diesem Geraet schlicht falsch steht (siehe fixEqualizerTarget()) und ggf.
+        //einmal reparieren + erneut versuchen. Laeuft bewusst nur im Fehlerfall, nicht
+        //bei jedem Aufruf - restart pipewire ist kurz hoerbar unterbrechend.
+        await fixEqualizerTarget()
+        result = await findEqualizerSinkLine()
+      }
       if (result){
         result = result.split(". Equalizer Tonbox Sink")
         eq = result[0].slice(-2,result[0].length)
