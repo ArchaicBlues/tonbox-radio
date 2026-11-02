@@ -408,14 +408,20 @@ const checkDev = async (res) => {
                         var mp = ""
                         for (n in blkd.blockdevices[i].children){
                             mp = blkd.blockdevices[i].children[n].mountpoints[0]
+                            //lsblk liefert fuer Swap-Partitionen das literale Pseudo-"[SWAP]"
+                            //statt eines echten Mountpoints oder "null" - das als Pfad an
+                            //mountCheck()/checkDevMediaServer() weiterzugeben fuehrt nur zu
+                            //einem sinnlosen "ls [SWAP]: No such file or directory".
+                            if (mp === "[SWAP]") continue
                             let result = await mountCheck(mp,dev,media)
                             console.log(result)
                         }
                     }
-                } 
+                }
                 else {
                     dev = blkd.blockdevices[i].name
                     mp = blkd.blockdevices[i].mountpoints[0]
+                    if (mp === "[SWAP]") continue
                     let result = await mountCheck(mp,dev,media)
                     console.log(result)
                 }
