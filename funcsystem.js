@@ -2282,8 +2282,57 @@ module.exports = function(required){
                 //und rebootet am Ende selbst (sudo reboot), wenn sich dadurch etwas geaendert
                 //hat - wuerde die Antwort erst danach kommen, haenge der Request bis zum
                 //Reboot und der Browser zeigt nur einen Timeout.
-                procStatus.text = "Neue IP/Gateway werden uebernommen, Geraet startet jetzt neu..."
-                await doSystem(res)
+                //
+                //NICHT die normale (schwere) system.ejs-Seite senden: die laedt mehrere externe
+                //Ressourcen (Google Fonts, cdnjs, ...) - bis die im Browser auch nur zu laden
+                //beginnen, ist das Geraet laengst neu gestartet und die Verbindung weg, die
+                //Seite bleibt dann leer/unvollstaendig stehen. Stattdessen eine in sich
+                //geschlossene Seite (wie beim Update-Spinner) ohne jede externe Ressource, die
+                //die NEUE Adresse direkt anpollt (nicht blind "/" auf der alten Origin) und erst
+                //dann dorthin weiterleitet, wenn das Geraet dort tatsaechlich antwortet.
+                const newUrl = "http://" + settings.ip + ":8000/"
+                res.send(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1">
+                    <title>Applying network settings...</title>
+                    <style>
+                    body { background:#000; color:#00d2ff; display:flex; justify-content:center; align-items:center;
+                        height:100vh; font-size:1.3rem; font-family:sans-serif; flex-direction:column; text-align:center; }
+                    .spinner { border:6px solid #222; border-top:6px solid #00d2ff; border-radius:50%;
+                        width:50px; height:50px; margin-bottom:24px; animation:spin 1s linear infinite; }
+                    @keyframes spin { 100% { transform: rotate(360deg); } }
+                    </style>
+                    </head>
+                    <body>
+                    <div class="spinner"></div>
+                    <div>Neue Netzwerk-Einstellungen werden übernommen,<br>Gerät startet jetzt neu...</div>
+                    <div style="margin-top:16px; font-size:1rem;" id="status">Warte auf <b>${newUrl}</b> ...</div>
+                    <script>
+                    const target = ${JSON.stringify(newUrl)};
+                    let tries = 0;
+                    async function poll(){
+                        tries++;
+                        try{
+                            await fetch(target, {mode:"no-cors", cache:"no-store", signal: AbortSignal.timeout(2000)});
+                            document.getElementById("status").textContent = "Gerät ist wieder erreichbar, Weiterleitung...";
+                            window.location.href = target;
+                            return;
+                        }catch(e){
+                            if (tries > 90){
+                                document.getElementById("status").innerHTML =
+                                    "Gerät antwortet noch nicht unter " + target + ".<br>Bitte Adresse manuell im Browser aufrufen.";
+                                return;
+                            }
+                        }
+                        setTimeout(poll, 2000);
+                    }
+                    setTimeout(poll, 4000);
+                    </script>
+                    </body>
+                    </html>
+                `)
                 doLAN(true).catch(err => {
                     console.log("configSettings: doLAN fehlgeschlagen: " + err)
                 })
