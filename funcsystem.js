@@ -2162,31 +2162,32 @@ module.exports = function(required){
             }
             console.log("wifiConfigInit: ip =" + settings.ip + " SSID="+settings.ssid +" Pass="+settings.pass)
             await logging("wifiConfigInit: ip =" + settings.ip + " SSID="+settings.ssid +" Pass="+settings.pass)
-            var result = await execCmd("ls /etc/NetworkManager/system-connections/ >&1")
-            var connections = []
-            if (result && !result.match("err")) {
-                connections = result.split("\n").map(s=>s.trim()).filter(s=>s.length>0)
-            }
-            //only 1 wifi connection allowed: Tonbox.nmconnection
-            var tonboxCon = false
-            for (let i=0;i<connections.length;i++){
-                const fn = connections[i]
-                if (fn.match(/^Tonbox(\.nmconnection)?$/) || fn.match(/^Tonbox\-/)) {
-                    // mark that a Tonbox related file exists
-                    tonboxCon = true
-                    if (fn.match(/^Tonbox\-/)){
-                        // remove legacy files Tonbox-*
-                        await execCmd("sudo rm -f /etc/NetworkManager/system-connections/"+fn+" >&1")
+            //Bisher wurde eine bestehende "Tonbox"-Verbindung ueber den Dateinamen in
+            ///etc/NetworkManager/system-connections/ geraten (z.B. "Tonbox.nmconnection") -
+            //je nach NetworkManager-Backend/-Version kann der tatsaechliche Dateiname davon
+            //abweichen, wodurch eine bereits bestehende Verbindung uebersehen wurde. "con add"
+            //legt dann eine ZWEITE, gleichnamige Verbindung an statt die alte zu ersetzen -
+            //beide koennen abwechselnd/gleichzeitig aktiv sein (alte statische + neue IP).
+            //nmcli direkt nach dem Profil-NAMEN fragen ist robuster als Dateinamen zu raten,
+            //und ueber die UUID loeschen deckt auch mehrere bereits angesammelte Duplikate ab.
+            var existing = await execCmd("nmcli -t -f NAME,UUID connection show 2>/dev/null | grep '^Tonbox:' || true")
+            if (existing){
+                for (var line of existing.trim().split("\n")){
+                    var uuid = line.split(":")[1]
+                    if (uuid){
+                        await execCmd("sudo nmcli con down "+uuid+" >&1 || true")
+                        await execCmd("sudo nmcli con delete "+uuid+" >&1 || true")
                     }
                 }
             }
-            //Wegen meherer ip adressen in Tonbox.nmconnection muss connection zuvor gelöscht werden
-            if (tonboxCon) {
-                result = await execCmd("nmcli con show | grep '^Tonbox' >&1")
-                if (result && !result.match("err")){
-                    // ensure connection down and deleted
-                    await execCmd("sudo nmcli con down Tonbox >&1 || true")
-                    await execCmd("sudo nmcli con delete Tonbox >&1 || true")
+            //Alte Dateileichen aus genau diesem Bug (z.B. "Tonbox-1.nmconnection" durch
+            //wiederholtes "con add" ohne vorheriges Loeschen) zusaetzlich aufraeumen
+            var result = await execCmd("ls /etc/NetworkManager/system-connections/ >&1 || true")
+            if (result){
+                for (var fn of result.split("\n").map(s=>s.trim()).filter(s=>s.length>0)){
+                    if (fn.match(/^Tonbox\-/)){
+                        await execCmd("sudo rm -f /etc/NetworkManager/system-connections/"+fn+" >&1")
+                    }
                 }
             }
 
@@ -2207,8 +2208,9 @@ module.exports = function(required){
             await execCmd("sudo nmcli connection modify 'Wired connection 1' connection.autoconnect-priority 10 >&1")
             await execCmd("sudo nmcli connection modify 'Tonbox' ipv4.method manual >&1")
 
-            // bring connection up
-            await execCmd("sudo nmcli con up Tonbox >&1")
+            // bring connection up - "down" zuerst zur Sicherheit, auch wenn die Verbindung
+            // hier eigentlich frisch angelegt wurde (siehe Begruendung bei eth0/wlan0 oben)
+            await execCmd("sudo nmcli con down Tonbox 2>/dev/null || true; sudo nmcli con up Tonbox >&1")
             ping_required = true
             return true
         }
