@@ -85,6 +85,29 @@ YouTube playback) and a Discogs user token (optional, for vinyl metadata
 lookups) from the web UI; this writes `.settings.conf` in the project
 directory, which is git-ignored and never shared.
 
+## Using a DAC HAT for Line-Out (optional)
+
+The app auto-detects any attached audio HAT as a Line-Out target, regardless
+of model - no code change needed. What *is* needed, for any HAT, is enabling
+its kernel driver by adding the matching `dtoverlay=` line to
+`/boot/firmware/config.txt` (under `[all]`) and rebooting - this is a boot-time
+setting the Pi's firmware reads before Linux (and this app) ever starts, so
+it can't be selected automatically at runtime. Common HATs:
+
+| HAT / chip | `dtoverlay=` |
+|---|---|
+| Raspberry Pi DAC+ / DAC Pro / DigiAMP+ (formerly IQaudio) | `iqaudio-dacplus` / `iqaudio-digiampplus` |
+| HiFiBerry DAC / DAC+ Light / Zero, generic PCM5102A boards | `hifiberry-dac` |
+| HiFiBerry DAC+ / DAC+ Pro / Amp2 (PCM5122) | `hifiberry-dacplus` |
+| HiFiBerry DAC2 HD | `hifiberry-dacplushd` |
+| Allo Boss DAC | `allo-boss-dac-pcm512x-audio` |
+| JustBoom DAC / Amp | `justboom-dac` |
+| WM8960-based boards (e.g. Waveshare) | `wm8960-soundcard` |
+
+Check `cat /proc/asound/cards` after rebooting to confirm the HAT shows up as
+its own card (besides `Headphones` and `vc4hdmi*`), then select it as the
+audio output from the web UI.
+
 ## Running as a systemd service (autostart on boot)
 
 A ready-made unit file is provided at
