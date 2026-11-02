@@ -67,25 +67,32 @@ module.exports = async function(required){
     //Headphones/HDMI) und schreibt ihn nur dann in die Config-Dateien, wenn er vom
     //aktuell eingetragenen abweicht - danach PipeWire neu starten, damit es greift.
     try{
-      var out = await execCmd("pw-cli ls Node 2>/dev/null | grep -A3 'alsa_output' || true")
-      var lines = out.split("\n")
-      var candidates = []
-      var current = null
-      for (var i=0; i<lines.length; i++){
-        var mName = lines[i].match(/node\.name\s*=\s*"([^"]+)"/)
-        var mNick = lines[i].match(/node\.nick\s*=\s*"([^"]*)"/)
-        if (mName){
-          if (current) candidates.push(current)
-          current = {name: mName[1], nick: ""}
-        }
-        if (mNick && current) current.nick = mNick[1]
-      }
-      if (current) candidates.push(current)
+      //Kurz nach PipeWire-Start (z.B. direkt bei configureTonbox()) hat WirePlumber die
+      //ALSA-Sinks teils noch nicht fertig enumeriert - "pw-cli ls Node" kann dann kurzzeitig
+      //noch gar keinen alsa_output-Knoten zeigen, auch wenn die Karte laengst da ist. Wie
+      //findEqualizerSinkLine() daher kurz retrien statt beim ersten leeren Versuch aufzugeben.
       var target = null
-      for (var c of candidates){
-        if (!c.nick.match(/headphone|hdmi/i)){
-          target = c.name
-          break
+      for (var attempt=0; attempt<10 && !target; attempt++){
+        if (attempt > 0) await new Promise(r => setTimeout(r, 300))
+        var out = await execCmd("pw-cli ls Node 2>/dev/null | grep -A3 'alsa_output' || true")
+        var lines = out.split("\n")
+        var candidates = []
+        var current = null
+        for (var i=0; i<lines.length; i++){
+          var mName = lines[i].match(/node\.name\s*=\s*"([^"]+)"/)
+          var mNick = lines[i].match(/node\.nick\s*=\s*"([^"]*)"/)
+          if (mName){
+            if (current) candidates.push(current)
+            current = {name: mName[1], nick: ""}
+          }
+          if (mNick && current) current.nick = mNick[1]
+        }
+        if (current) candidates.push(current)
+        for (var c of candidates){
+          if (!c.nick.match(/headphone|hdmi/i)){
+            target = c.name
+            break
+          }
         }
       }
       if (!target) return //keine passende Ausgabe gefunden - nichts aendern, lieber nichts tun als raten

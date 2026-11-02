@@ -575,6 +575,14 @@ module.exports = function(){
         procStatus.text = "Bluetooth-Stream aktiv - Radio wird nicht gestartet"
         return false;
       }
+      //Kann passieren, wenn der Browser noch eine Senderliste von vor einem Neustart/
+      //Reboot zeigt (z.B. durch eine IP-Aenderung) und "Play" auf einen Index klickt, den
+      //radioFound in dieser neuen Server-Instanz noch nicht (wieder) enthaelt.
+      if (!radioFound[index]){
+        console.log("playStream: radioFound["+index+"] nicht vorhanden - Senderliste veraltet?")
+        procStatus.text = "Senderliste nicht mehr aktuell - bitte Seite neu laden"
+        return false;
+      }
       let url = radioFound[index].url
       console.log("PlayStream url="+url+" engine="+radioFound[index].engine)
       if (radioFound[index].engine === "mpv"){

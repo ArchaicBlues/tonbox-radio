@@ -470,7 +470,11 @@ const mountCheck = async (mp,dev,media) => {
     }
     catch(msg){
         console.log(msg)
-        if (msg.match("not empty"))
+        //msg ist bei einem fehlgeschlagenen mount (execCmd-Rejection) ein Error-Objekt, kein
+        //String - .match() existiert darauf nicht und wuerde selbst wieder werfen, und zwar
+        //genau hier im Fehlerbehandler (kaschiert dann den eigentlichen Mount-Fehler mit einem
+        //neuen "msg.match is not a function").
+        if (String(msg).match("not empty"))
             console.log(mp+" could be myUSB !")
         return msg
     }
