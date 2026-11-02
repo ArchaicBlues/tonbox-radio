@@ -265,47 +265,52 @@ module.exports = function (required) {
       await ensureUserAudioConfig()
 
       await createEqSliderJson()
-      data = 'pcm.!default\n {\n type asym playback.pcm\n {\n type plug\n slave.pcm "output"\n }\n capture.pcm\n {\n type plug\n slave.pcm "input"\n }\n }\n pcm.output\n {\n type hw\n card 0\n }\n ctl.!default\n {\n type hw\n card 0 \n }\n'
-      let filePath = path.join(os.homedir(), '.asoundrc');
-      await fs.writeFileSync(filePath, data);
 
-      //get hw devices / DAC has prio / needs ~/.asoundrc
+      //HAT per Ausschluss ermitteln statt "existiert eine Karte 1" anzunehmen: auf
+      //Geraeten mit deaktivierter Onboard-Audio (siehe README) liegt ein angeschlossenes
+      //HAT selbst auf Karte 0, nicht auf Karte 1 - Karte 1 kann dann bereits HDMI sein
+      //(live beobachtet: Boss-DAC-Geraet mit "card 0: BossDAC", "card 1: vc4hdmi0"). Die
+      //alte Annahme setzte .asoundrc dann faelschlich auf die HDMI-Karte.
       var inf = await execCmd("aplay -l | grep card >&1")
-
       console.log(inf)
-      if (inf.match("card 1:")) {
-        data = 'pcm.!default\n {\n type asym playback.pcm\n {\n type plug\n slave.pcm "output"\n }\n capture.pcm\n {\n type plug\n slave.pcm "input"\n }\n }\n pcm.output\n {\n type hw\n card 1\n }\n ctl.!default\n {\n type hw\n card 1 \n }\n'
+      var hatCardIndex = null
+      for (var cl of inf.split("\n")) {
+        var cm = cl.match(/^card (\d+):/)
+        if (cm && !cl.match(/Headphones|vc4hdmi/i)) {
+          hatCardIndex = cm[1]
+          break
+        }
+      }
+
+      if (hatCardIndex !== null) {
+        data = 'pcm.!default\n {\n type asym playback.pcm\n {\n type plug\n slave.pcm "output"\n }\n capture.pcm\n {\n type plug\n slave.pcm "input"\n }\n }\n pcm.output\n {\n type hw\n card ' + hatCardIndex + '\n }\n ctl.!default\n {\n type hw\n card ' + hatCardIndex + ' \n }\n'
         let filePath = path.join(os.homedir(), '.asoundrc');
         await fs.writeFileSync(filePath, data);
-
-        inf = await execCmd("pw-cli ls Node | grep alsa_output | sort | uniq >&1")
-        inf = inf.split("\n")
-        let full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt >&1")
-        let nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt | grep node.target >&1")
-        let nodeName = pickAlsaOutputNode(inf, true)
-        full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
-        filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/tonbox.txt');
-        await fs.writeFileSync(filePath, full);
-        full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox_All.txt >&1")
-        nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox_All.txt | grep node.target >&1")
-        full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
-        filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/tonbox_All.txt');
-        await fs.writeFileSync(filePath, full);
       } else {
-        await execCmd("rm ~/.asoundrc")
-        inf = await execCmd("pw-cli ls Node | grep alsa_output | sort | uniq >&1")
-        inf = inf.split("\n")
-        let full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt >&1")
-        let nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox.txt | grep node.target >&1")
-        let nodeName = pickAlsaOutputNode(inf, false)
-        full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
-        filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/tonbox.txt');
-        await fs.writeFileSync(filePath, full);
-        full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox_All.txt >&1")
-        nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/tonbox_All.txt | grep node.target >&1")
-        full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
-        filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/tonbox_All.txt');
-        await fs.writeFileSync(filePath, full);
+        await execCmd("rm ~/.asoundrc").catch(() => { })
+      }
+
+      //Wie findEqualizerSinkLine(): direkt nach PipeWire-Start hat WirePlumber die
+      //ALSA-Sinks teils noch nicht fertig enumeriert - kurz retrien statt beim ersten
+      //leeren Versuch eine KAPUTTE (leere) node.target-Zeile in die Config zu schreiben.
+      var nodeName = ""
+      for (var attempt = 0; attempt < 10 && !nodeName; attempt++) {
+        if (attempt > 0) await new Promise(r => setTimeout(r, 300))
+        let out = await execCmd("pw-cli ls Node | grep alsa_output | sort | uniq >&1")
+        nodeName = pickAlsaOutputNode(out.split("\n"), hatCardIndex !== null)
+      }
+      if (nodeName) {
+        for (var fn of ["tonbox.txt", "tonbox_All.txt"]) {
+          try {
+            let full = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/" + fn + " >&1")
+            let nodeT = await execCmd("cat ~/.config/pipewire/pipewire.conf.d/" + fn + " | grep node.target >&1")
+            full = full.replace(nodeT, nodeT.replace(/=.*/, "= " + nodeName))
+            let filePath = path.join(os.homedir(), '/.config/pipewire/pipewire.conf.d/' + fn);
+            await fs.writeFileSync(filePath, full);
+          } catch (err) { console.log("setAudioEnvironment: " + fn + ": " + err) }
+        }
+      } else {
+        console.log("setAudioEnvironment: kein alsa_output-Knoten gefunden - node.target NICHT geaendert (bestehenden Wert behalten statt kaputtzuschreiben)")
       }
 
       settings.reverb = "off"
