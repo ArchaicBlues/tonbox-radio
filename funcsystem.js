@@ -2062,9 +2062,16 @@ module.exports = function(required){
 //wifi=""
 //settings.ip = ip
             var wifi = await execCmd("nmcli con show | grep wlan0 >&1 || true")
+            //Bisher komplett stillschweigend, wenn "wifi" leer war oder die IP schon passte -
+            //ohne das war aus dem Log nicht zu unterscheiden, ob wlan0 ueberhaupt als
+            //verbunden erkannt wurde.
+            console.log("doLAN: wifi(nmcli con show|grep wlan0)='"+wifi+"' ipList[2]="+ipList[2]+" settings.ip="+settings.ip)
             if (wifi){
                 await logging("wifi detected")
-                if (!ipList[2].match(settings.ip)) {
+                //.includes() statt .match(): settings.ip ist eine blosse IP-Zeichenkette,
+                //kein Regex-Muster - mit .match() wuerden die Punkte als "ein beliebiges
+                //Zeichen" interpretiert statt als literale Punkte.
+                if (!(ipList[2]||"").includes(settings.ip)) {
                     procStatus.text = "wlan0 ip change: "+settings.ip + " required"
                     await logging(procStatus.text)
                     console.log(procStatus.text)
@@ -2160,6 +2167,10 @@ module.exports = function(required){
         //wifi Kommunikations-Config File "Tonbox.nccommunicate" löschen und neu aufsetzen
         try{
             if (!(settings.ssid && settings.pass && settings.ip)){
+                //logging() ist ein No-Op - ohne console.log war diese fruehe Rueckkehr im
+                //Service-Log komplett unsichtbar, nur procStatus.text (nur auf der Seite
+                //sichtbar) wurde gesetzt.
+                console.log("wifiConfigInit: missing ssid/pass/ip - ssid="+(!!settings.ssid)+" pass="+(!!settings.pass)+" ip="+settings.ip)
                 await logging("missing ip, ssid, pass ...")
                 procStatus.text +=" + WLAN inactive, you may configure it"
                 return false

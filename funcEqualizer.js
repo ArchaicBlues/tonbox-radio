@@ -95,7 +95,14 @@ module.exports = async function(required){
           }
         }
       }
-      if (!target) return //keine passende Ausgabe gefunden - nichts aendern, lieber nichts tun als raten
+      if (!target){
+        //bisher komplett stillschweigend - ohne das sieht man im Log nicht, ob "pw-cli ls
+        //Node" schlicht leer blieb (z.B. pw-cli kann den PipeWire-Socket in dieser
+        //Umgebung nicht erreichen) oder ob nur kein passender Kandidat gefunden wurde.
+        console.log("fixEqualizerTarget: kein passender alsa_output-Knoten gefunden (pw-cli ls Node lieferte nichts Brauchbares)")
+        return
+      }
+      console.log("fixEqualizerTarget: aktiver Ausgabe-Knoten erkannt: " + target)
 
       var confDir = "/home/pi/.config/pipewire/pipewire.conf.d"
       var files = ["tonboxFilter.conf", "tonbox.txt", "tonbox_All.txt"]
@@ -115,8 +122,12 @@ module.exports = async function(required){
         }catch(err){/* Datei existiert auf diesem Geraet evtl. nicht - ignorieren */}
       }
       if (changed){
-        await execCmd("systemctl --user restart pipewire")
-        await new Promise(r => setTimeout(r, 2000))
+        //wireplumber mit-neustarten, nicht nur pipewire: wireplumber verwaltet Sessions/
+        //Policy (welcher Sink Default ist etc.) - ein reiner pipewire-Neustart alleine hat
+        //sich an anderer Stelle im Code (funcAudio.js) bereits als nicht ausreichend
+        //gezeigt, dort wird konsequent "pipewire wireplumber" zusammen neu gestartet.
+        await execCmd("systemctl --user restart pipewire wireplumber")
+        await new Promise(r => setTimeout(r, 3000))
       }
     }catch(err){
       console.log("fixEqualizerTarget: " + err)
