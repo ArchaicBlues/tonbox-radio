@@ -464,12 +464,22 @@ module.exports = function(){
   },
   this.playMPV = function(url) {
     console.log("play MPV "+url)
-    settings.powerUpSoundURL = "mpv --cache=yes --cache-secs=15 --demuxer-readahead-secs=5 --display-tags=* >help/metadata.txt "+url
+    //--ao=pipewire: siehe Begruendung bei spawnMpv() unten - startPowerUpAudio()
+    //(funcAudio.js) fuehrt genau DIESEN String beim naechsten Boot per exec() erneut aus,
+    //baut also sein eigenes mpv-Kommando unabhaengig vom Args-Array dort drunter.
+    settings.powerUpSoundURL = "mpv --ao=pipewire --cache=yes --cache-secs=15 --demuxer-readahead-secs=5 --display-tags=* >help/metadata.txt "+url
     writeSettings()
     const out = fs.openSync('help/metadata.txt', 'w');
     // spawn mpv and monitor short failures; retry once with larger cache if it dies quickly
     const spawnMpv = (cacheSecs, readaheadSecs) => {
       const mpv = spawn("mpv", [
+        //Ohne explizites --ao waehlt mpv sein Audio-Backend selbst - landet das auf
+        //"alsa" statt "pipewire", geht die Wiedergabe ueber die von
+        //setAudioEnvironment() geschriebene ~/.asoundrc DIREKT zur Hardware, komplett
+        //an der Filterkette ("eq10"/Equalizer) vorbei (live bestaetigt: wpctl status
+        //zeigte eqOut->Hardware als "paused", d.h. ungefuettert). --ao=pipewire
+        //erzwingt den Weg durch PipeWire und damit durch den Equalizer.
+        "--ao=pipewire",
         "--cache=yes",
         `--cache-secs=${cacheSecs}`,
         `--demuxer-readahead-secs=${readaheadSecs}`,
