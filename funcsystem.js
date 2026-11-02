@@ -1420,7 +1420,13 @@ module.exports = function(required){
             //"arecord -l" listet hn auch auf
             audioInfo[0] = c[0] //always Headphone
             for (i in c){
-                if (c[i].match("DAC")){ 
+                //Per Ausschluss statt festem Namen "DAC" erkennen: der ALSA-Kartenname
+                //eines HAT haengt vom jeweiligen dtoverlay ab (z.B. "DAC" beim offiziellen
+                //RPi DAC+, aber anders bei Allo/HiFiBerry/etc. HATs) - jede Karte, die
+                //weder die eingebaute Kopfhoerer-Buchse noch HDMI ist, ist ein angeschlossenes
+                //HAT, unabhaengig vom genauen Namen. "[" filtert die eingerueckten
+                //Fortsetzungszeilen heraus, die kein Karten-Index-Format haben.
+                if (c[i].includes("[") && !c[i].match(/Headphones|vc4hdmi/i)){
                     //Headphone wird nicht benutzt wenn HAT DAC vorhanden !
                     audioInfo[0] = c[i]
                     break;
