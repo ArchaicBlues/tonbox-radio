@@ -464,10 +464,10 @@ module.exports = function(){
   },
   this.playMPV = function(url) {
     console.log("play MPV "+url)
-    //--ao=pipewire: siehe Begruendung bei spawnMpv() unten - startPowerUpAudio()
+    //--audio-device=pipewire/eq10: siehe Begruendung bei spawnMpv() unten - startPowerUpAudio()
     //(funcAudio.js) fuehrt genau DIESEN String beim naechsten Boot per exec() erneut aus,
     //baut also sein eigenes mpv-Kommando unabhaengig vom Args-Array dort drunter.
-    settings.powerUpSoundURL = "mpv --ao=pipewire --cache=yes --cache-secs=15 --demuxer-readahead-secs=5 --display-tags=* >help/metadata.txt "+url
+    settings.powerUpSoundURL = "mpv --audio-device=pipewire/eq10 --cache=yes --cache-secs=15 --demuxer-readahead-secs=5 --display-tags=* >help/metadata.txt "+url
     writeSettings()
     const out = fs.openSync('help/metadata.txt', 'w');
     // spawn mpv and monitor short failures; retry once with larger cache if it dies quickly
@@ -477,9 +477,17 @@ module.exports = function(){
         //"alsa" statt "pipewire", geht die Wiedergabe ueber die von
         //setAudioEnvironment() geschriebene ~/.asoundrc DIREKT zur Hardware, komplett
         //an der Filterkette ("eq10"/Equalizer) vorbei (live bestaetigt: wpctl status
-        //zeigte eqOut->Hardware als "paused", d.h. ungefuettert). --ao=pipewire
-        //erzwingt den Weg durch PipeWire und damit durch den Equalizer.
-        "--ao=pipewire",
+        //zeigte eqOut->Hardware als "paused", d.h. ungefuettert).
+        //--audio-device=pipewire/eq10 statt nur --ao=pipewire: reines --ao=pipewire
+        //verbindet mpv mit PipeWires aktuellem Default-Sink - auf einem Zielgeraet
+        //live bestaetigt, dass WirePlumber sich pro App/Stream ein fruehrer benutztes
+        //Ziel merkt (hier: die Hardware direkt) und das bei neuen mpv-Streams WIEDER
+        //verwendet, auch wenn "default.audio.sink = eq10" in tonboxFilter.conf steht
+        //(wpctl status zeigte mpv->"Boss DAC HiFi" direkt, eq10 komplett ungenutzt).
+        //Explizites Device "pipewire/eq10" (node.name ist in tonboxFilter.conf/
+        //tonbox.txt/tonbox_All.txt fest auf "eq10" gesetzt) umgeht diese
+        //Default-Sink-Ambiguitaet vollstaendig.
+        "--audio-device=pipewire/eq10",
         "--cache=yes",
         `--cache-secs=${cacheSecs}`,
         `--demuxer-readahead-secs=${readaheadSecs}`,
