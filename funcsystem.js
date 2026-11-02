@@ -2233,7 +2233,9 @@ module.exports = function(required){
                         //.includes() statt .match(): newIp ist eine blosse IP-Zeichenkette,
                         //kein Regex-Muster - mit .match() wuerden die Punkte als "ein beliebiges
                         //Zeichen" interpretiert statt als literale Punkte.
-                        if (!ipList[1].includes(newIp) || (!ipList[2].includes(newIp))){
+                        //(ipList[x]||""): auf einem frischen Geraet, bevor getIP() zum ersten
+                        //Mal gelaufen ist, sind diese Slots noch undefined statt "".
+                        if (!(ipList[1]||"").includes(newIp) || (!(ipList[2]||"").includes(newIp))){
                             if (settings.ip !== newIp) ipChanged = true
                             settings.ip = newIp
                             await writeSettings()
