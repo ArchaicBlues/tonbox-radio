@@ -471,11 +471,17 @@ module.exports = async function(required){
       console.log("eq Object ID = "+ eq )//+ ", au ID = " + au + ", au2 ID =" + au2)
       //Equalizer immer setzen wenn vorhanden
       if (eq){
-        await execCmd("wpctl set-default " + eq)
+        //wpctl lehnt "set-default" auf virtuelle Filter-Chain-Knoten ab ("failed to set
+        //default node... media.class = Audio/Sink", live bestaetigt), obwohl eq10 laut
+        //wpctl status (der "*"-Marker) laengst Standard ist - das kommt bereits von
+        //"context.properties { default.audio.sink = eq10 }" in tonboxFilter.conf selbst.
+        //Dieser Aufruf ist damit ueberfluessig; ohne die Absicherung brach er bisher ab
+        //und liess "pwPlay = true" nie erreichen.
+        await execCmd("wpctl set-default " + eq + " || true")
         console.log("pipewireAudioInit: wpctl set-default " + eq)
- 
+
         pwPlay = true
-      }else 
+      }else
         pwPlay = false
       // cmd = "pamixer --set-volume " + parseInt(75+settings.jackVolume*0.15)
       // console.log(cmd)
