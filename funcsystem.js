@@ -1870,6 +1870,14 @@ module.exports = function(required){
             }
             console.log("SSID="+ ssid)
 
+            //wlan0 kann als Geraet existieren, aber fuer NetworkManager trotzdem nicht
+            //verfuegbar sein (WiFi-Radio per "nmcli radio wifi" aus, oder rfkill-blockiert) -
+            //"nmcli con up" findet dann gar kein passendes Geraet und schlaegt mit einer
+            //kryptischen Meldung fehl, die nichts mit dem eigentlichen Profil zu tun hat.
+            //Beides ist ungefaehrlich erneut zu setzen, auch wenn schon an.
+            await execCmd("sudo nmcli radio wifi on || true")
+            await execCmd("sudo rfkill unblock wifi || true")
+
             //"|| true": grep findet auf einem frischen Geraet (noch kein "Tonbox"-Profil)
             //nichts und beendet sich mit Exit-Code 1 - ohne "|| true" wertet execCmd() das
             //als Fehler und wirft, statt "result" einfach leer zu lassen (siehe if/else unten).
