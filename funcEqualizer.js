@@ -50,12 +50,18 @@ module.exports = async function(required){
     //tatsaechlich laeuft; wpctl set-default wurde deshalb nie auf ihn aufgerufen, Audio
     //blieb am eigentlichen Default-Sink vorbei am Equalizer.
     //
-    //"eq10" kann kurz nach einem PipeWire-Neustart (Reverb-Toggle, Sender-Wechsel - siehe
+    //Live auf zwei Geraeten mit unterschiedlicher PipeWire-Version gegengeprueft: 1.4.2
+    //zeigt den Knoten unter node.name ("eq10"), 1.2.7 zeigt ihn stattdessen unter
+    //node.description/media.name ("Equalizer Tonbox Sink") - je nach Version kommt NUR
+    //einer der beiden Texte in "wpctl status" vor. Auf beide gleichzeitig pruefen, nicht
+    //nur auf einen, um zwischen PipeWire-Versionen nicht erneut einseitig zu brechen.
+    //
+    //Kann kurz nach einem PipeWire-Neustart (Reverb-Toggle, Sender-Wechsel - siehe
     //ensureMpvRestarted() in funcRadio.js) voruebergehend fehlen, waehrend die Filter-Kette
     //neu lädt. Kurz retrien statt sofort leer zurückzugeben - ein fehlender Treffer liesse
     //EQ-Befehle sonst stillschweigend ins Leere laufen (siehe modifyFilterOnTheFly()/submitFilter()).
     for (let i=0; i<10; i++){
-      let line = await execCmd('wpctl status 2>/dev/null | grep "\\. eq10 " || true')
+      let line = await execCmd('wpctl status 2>/dev/null | grep -E "\\. eq10 |Equalizer Tonbox Sink" || true')
       if (line && line.trim()) return line
       await new Promise(r => setTimeout(r, 300))
     }
