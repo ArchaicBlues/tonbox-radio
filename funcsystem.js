@@ -1063,11 +1063,18 @@ module.exports = function(required){
         try{
             
             ipList.length = 0 //array löschen
-            const [gatewayOut, eth0Out, wlan0Out] = await Promise.all([
+            //allSettled statt all(): auf einem Geraet ohne wlan0 (reines Ethernet) schlaegt NUR
+            //dieser eine Befehl fehl - mit all() liess das die GESAMTE Promise (inkl. Gateway
+            //und eth0, die beide erfolgreich gewesen waeren) als rejected gelten, sodass ipList
+            //danach komplett leer blieb und z.B. doLAN()'s "if (ipList[1])"-eth0-Block nie lief.
+            const [gatewayRes, eth0Res, wlan0Res] = await Promise.allSettled([
                 execCmd('nmcli d show | grep IP4.GATEWAY >&1'),
                 execCmd('ifconfig eth0 | grep broadcast >&1'),
                 execCmd('ifconfig wlan0 | grep broadcast >&1')
             ])
+            const gatewayOut = gatewayRes.status === 'fulfilled' ? gatewayRes.value : ''
+            const eth0Out = eth0Res.status === 'fulfilled' ? eth0Res.value : ''
+            const wlan0Out = wlan0Res.status === 'fulfilled' ? wlan0Res.value : ''
 
             let inf = gatewayOut
             inf = inf.split("\n")
