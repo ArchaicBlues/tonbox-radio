@@ -2014,7 +2014,7 @@ module.exports = function(required){
 //Test
 //wifi=""
 //settings.ip = ip
-            var wifi = await execCmd("nmcli con show | grep wlan0 >&1")
+            var wifi = await execCmd("nmcli con show | grep wlan0 >&1 || true")
             if (wifi){
                 await logging("wifi detected")
                 if (!ipList[2].match(settings.ip)) {

@@ -41,6 +41,20 @@ function spawnAsync(cmd, args = []) {
 
 
 module.exports = async function(required){
+  this.findEqualizerSinkLine = async function(){
+    //"Equalizer Tonbox Sink" kann kurz nach einem PipeWire-Neustart (Reverb-Toggle,
+    //Sender-Wechsel - siehe ensureMpvRestarted() in funcRadio.js) voruebergehend
+    //fehlen, waehrend die Filter-Kette neu lädt. Kurz retrien statt sofort leer
+    //zurückzugeben - ein fehlender Treffer liesse EQ-Befehle sonst stillschweigend
+    //ins Leere laufen (siehe modifyFilterOnTheFly()/submitFilter()).
+    for (let i=0; i<10; i++){
+      let line = await execCmd('wpctl status 2>/dev/null | grep "Equalizer Tonbox Sink" || true')
+      if (line && line.trim()) return line
+      await new Promise(r => setTimeout(r, 300))
+    }
+    console.log("findEqualizerSinkLine: 'Equalizer Tonbox Sink' nach 3s nicht gefunden")
+    return ""
+  },
   this.setVolumeSettings = async function (value){
     console.log("setVolumeSettings="+value)
     settings.jackVolume = value
@@ -87,7 +101,7 @@ module.exports = async function(required){
           filterGraph.graph[i-1].Gain = e[8]
         }
       }
-      var equObj = await execCmd('wpctl status | grep "Equalizer Tonbox Sink" >&1')
+      var equObj = await findEqualizerSinkLine()
       console.log(equObj)
       equObj = equObj.split(".")
       var objID = equObj[0].split(" ")
@@ -220,7 +234,7 @@ module.exports = async function(required){
   this.modifyFilterOnTheFly = async function (sliderNum,gain){
     try{
       // get object id of equalizer
-      var equObj = await execCmd('wpctl status | grep "Equalizer Tonbox Sink" >&1')
+      var equObj = await findEqualizerSinkLine()
       console.log(equObj)
       equObj = equObj.split(".")
       var objID = equObj[0].split(" ")
@@ -351,7 +365,7 @@ module.exports = async function(required){
       // //wpctl settings hier für effect_output.eq10 funktioniert nicht
       // d.h. pw-play spielt immer auf HAT-DAC, wenn vorhanden!
 
-      result = await execCmd("wpctl status | grep 'Equalizer Tonbox Sink' >&1")
+      result = await findEqualizerSinkLine()
       if (result){
         result = result.split(". Equalizer Tonbox Sink")
         eq = result[0].slice(-2,result[0].length)
