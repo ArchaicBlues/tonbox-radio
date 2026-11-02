@@ -1885,8 +1885,12 @@ module.exports = function(required){
             //settings.ip leer - "ipv4.addresses /24" (ohne Adresse davor) ist fuer nmcli
             //eine ungueltige IPv4-Adresse und bricht den ganzen Befehl ab. Nur dann auf
             //ipv4.method manual + feste Adresse bestehen, wenn tatsaechlich eine gesetzt ist -
-            //sonst ganz normal per DHCP verbinden.
-            var ipArgs = settings.ip ? ("ipv4.addresses " + settings.ip + "/24 ipv4.method manual") : "ipv4.method auto"
+            //sonst ganz normal per DHCP verbinden. "ipv4.addresses ''" ist dabei Pflicht,
+            //nicht nur "ipv4.method auto": "con modify" aendert nur die explizit genannten
+            //Eigenschaften - eine von einer frueheren manuellen Konfiguration uebrig
+            //gebliebene ipv4.addresses bliebe sonst stehen und wird von NetworkManager
+            //ZUSAETZLICH zur DHCP-Adresse angewandt (zwei IPs gleichzeitig auf wlan0).
+            var ipArgs = settings.ip ? ("ipv4.addresses " + settings.ip + "/24 ipv4.method manual") : "ipv4.addresses '' ipv4.method auto"
             result = await execCmd("ls /etc/NetworkManager/system-connections/ | grep Tonbox.nmconnection >&1 || true")
             if (result){
                 cmd = "sudo nmcli con modify Tonbox ifname wlan0 type wifi ssid '"+ssid+"' " + ipArgs
@@ -1918,8 +1922,11 @@ module.exports = function(required){
                 await execCmd("sudo nmcli connection modify 'Tonbox' ipv4.method manual >&1")
             }
 
-            cmd = "sudo nmcli con up Tonbox"
-            console.log(cmd)                    
+            //down vor up: eine ggf. schon aktive Verbindung nur "up"zubringen erzwingt keine
+            //vollstaendige Neuvergabe - eine zuvor vergebene Adresse kann als stale
+            //"secondary" IP haengen bleiben (siehe gleiche Begruendung bei eth0 in doLAN()).
+            cmd = "sudo nmcli con down Tonbox 2>/dev/null || true; sudo nmcli con up Tonbox"
+            console.log(cmd)
             await execCmd(cmd)
 
             console.log("WLAN connection done")
