@@ -1955,6 +1955,17 @@ module.exports = function(required){
     },
     this.doLAN = async function(reboot){
         console.log("doLAN...")
+        //wlan0 kann als Geraet existieren, aber fuer NetworkManager trotzdem nicht
+        //verfuegbar sein (WiFi-Radio per "nmcli radio wifi" aus, oder rfkill-blockiert) -
+        //dieser Zustand ist live bestaetigt NICHT zuverlaessig ueber einen Reboot hinweg
+        //persistent (frisst sich mal "an", mal "aus"). Bisher wurde das nur in
+        //wifiConfigUser() (interaktives Formular) vor "con up" sichergestellt, nicht hier
+        //in doLAN() - das laeuft aber bei JEDEM Boot (siehe server.js). Ohne eth0 als
+        //Fallback (Kabel ab) blieb das Geraet dann nach einem Reboot komplett unerreichbar,
+        //weil "nmcli con up Tonbox" lautlos an einem blockierten Radio scheiterte. Beides
+        //ist ungefaehrlich erneut zu setzen, auch wenn schon an.
+        await execCmd("sudo nmcli radio wifi on || true")
+        await execCmd("sudo rfkill unblock wifi || true")
         // // #get rid of RadioBrowser ECONNREFUSED over wlan0 issue (force ip4)
         // let correctIP = false
         // if (settings.ip){
