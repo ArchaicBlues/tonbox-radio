@@ -48,7 +48,7 @@ cd ArchaicNodeEJS
 bash bashScript/setupNopasswd.sh
 
 # system packages used by various features
-sudo apt install -y ffmpeg mpv alsa-utils bluez cd-discid imagemagick pipewire wireplumber pamixer
+sudo apt install -y ffmpeg mpv alsa-utils bluez cd-discid imagemagick pipewire wireplumber pamixer iputils-arping
 
 # run it
 npm install

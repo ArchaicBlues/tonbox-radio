@@ -1937,6 +1937,10 @@ module.exports = function(required){
             cmd = "sudo nmcli con down Tonbox 2>/dev/null || true; sudo nmcli con up Tonbox"
             console.log(cmd)
             await execCmd(cmd)
+            //unaufgeforderte ARP-Ankuendigung, siehe ausfuehrliche Begruendung in doLAN() -
+            //dieselbe IP kann kurz vorher noch an eth0 (andere MAC) gehangen haben.
+            if (settings.ip)
+                await execCmd("sudo arping -c 2 -U -I wlan0 " + settings.ip + " || true")
 
             console.log("WLAN connection done")
             await getIP()
@@ -2021,6 +2025,21 @@ module.exports = function(required){
                     await execCmd("sudo nmcli connection down Tonbox 2>/dev/null || true")
                     await execCmd("sudo nmcli connection up Tonbox 2>/dev/null || true")
                 }
+                // wlan0 bekommt bewusst dieselbe statische IP wie eth0 (siehe wifiConfigInit()/
+                // wifiConfigUser()), damit das Geraet unter derselben Adresse erreichbar bleibt,
+                // unabhaengig davon welches Interface gerade genutzt wird. Live bestaetigt:
+                // nach einem Reboot OHNE eth0 (Kabel ab) ist das Geraet trotz laengst
+                // funktionierender eigener Internetverbindung ueber wlan0 von AUSSEN (Browser
+                // auf einem anderen Rechner) minutenlang nicht erreichbar - andere Geraete im
+                // LAN (Router, Laptop) haben noch die ALTE eth0-MAC-Adresse fuer diese IP im
+                // ARP-Cache und schicken Pakete weiter an die jetzt tote eth0-MAC, bis dieser
+                // Eintrag von selbst ablaeuft. Eine unaufgeforderte ARP-Ankuendigung nach jedem
+                // Boot (auch wenn "correctIP" oben schon stimmte - genau dieser Fall trat auf,
+                // weil NetworkManager wlan0 mit dem gespeicherten Profil selbststaendig ohne
+                // Eingriff dieses Codes reaktiviert hatte) sorgt dafuer, dass andere Geraete die
+                // neue MAC sofort lernen statt auf den Cache-Timeout zu warten.
+                if (settings.ip)
+                    await execCmd("sudo arping -c 2 -U -I wlan0 " + settings.ip + " || true")
             } else {
                 await logging("WLAN (Tonbox) nicht verfügbar - überspringe WLAN-Konfiguration, nutze nur Ethernet")
                 console.log("WLAN nicht verfügbar, Ethernet-only Modus")
@@ -2242,6 +2261,10 @@ module.exports = function(required){
             // bring connection up - "down" zuerst zur Sicherheit, auch wenn die Verbindung
             // hier eigentlich frisch angelegt wurde (siehe Begruendung bei eth0/wlan0 oben)
             await execCmd("sudo nmcli con down Tonbox 2>/dev/null || true; sudo nmcli con up Tonbox >&1")
+            //unaufgeforderte ARP-Ankuendigung, siehe ausfuehrliche Begruendung in doLAN() -
+            //dieselbe IP kann kurz vorher noch an eth0 (andere MAC) gehangen haben.
+            if (settings.ip)
+                await execCmd("sudo arping -c 2 -U -I wlan0 " + settings.ip + " || true")
             ping_required = true
             return true
         }
