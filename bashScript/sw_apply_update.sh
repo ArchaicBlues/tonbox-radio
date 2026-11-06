@@ -95,7 +95,15 @@ cd "$APP"
 echo "Initializing services..."
 sudo systemctl daemon-reload
 systemctl --user enable Tonbox.service
-systemctl --user enable pipewire wireplumber  
+systemctl --user enable pipewire wireplumber
+
+# Tonbox.service ist ein USER-Service (WantedBy=default.target im User-Kontext) -
+# ohne "lingering" startet systemd den User-Manager fuer "pi" (und damit
+# Tonbox.service) erst bei der ERSTEN Login-Session (SSH/Konsole), nicht beim
+# Boot. Live bestaetigt: nach einem Power-up ohne Keyboard/Monitor und ohne
+# vorheriges SSH-Login blieb das Geraet voellig ohne Tonbox-Dienst - fuer ein
+# Headless-Geraet, das normale Nutzer nie per SSH anfassen, ein Showstopper.
+sudo loginctl enable-linger pi
 
 # pi must have access to audio cdrom etc
 sudo usermod -aG audio,cdrom pi
