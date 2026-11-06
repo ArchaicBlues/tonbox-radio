@@ -12,8 +12,9 @@ global.settings = {
         "gateway":constants.IP_GATEWAY_DEFAULT,
         //Zugriff über http://ip:8000
         "ip": constants.IP_DEFAULT,
-        //Verzeichnisort von ArchaicNodeEJS
-        "installDir": "/home/pi",
+        //Vollstaendiger Installationspfad von Tonbox (nicht nur das Elternverzeichnis -
+        //jede Nutzung haengte frueher "/ArchaicNodeEJS" selbst wieder an)
+        "installDir": "/home/pi/Tonbox",
         //HTTP live streaming (Internet) oder Card Number "0","1","2" max.möglich
         "mediaOut":"0",
         //Audio Device

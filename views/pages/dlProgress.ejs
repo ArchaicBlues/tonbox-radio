@@ -26,7 +26,7 @@
 
     //For starting a new connection. The client creates a new instance of  EventSource. 
     //It will send a new HTTP GET request to the server...
-    const es = new EventSource("http://" + "<%- ip %>" + ":8000" + "<%- sysdir %>" + "/ArchaicNodeEJS/funcSSE");
+    const es = new EventSource("http://" + "<%- ip %>" + ":8000" + "<%- sysdir %>" + "/funcSSE");
     const listener = function (event) {
         //alert("Event Listner: Type=" + event.type + ", data=" + event.data + " url=" + es.url)
         //See window console "Network" and than "Logs" in Firefox Developer tools

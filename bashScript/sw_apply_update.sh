@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-APP="/home/pi/ArchaicNodeEJS"
+APP="/home/pi/Tonbox"
 WORKDIR="/home/pi/update_tmp"
 
 echo "================================="

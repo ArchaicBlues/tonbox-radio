@@ -5,7 +5,7 @@ Wants=network-online.target pipewire.service wireplumber.service bt-a2dp-monitor
 
 [Service]
 Type=simple
-WorkingDirectory=/home/pi/ArchaicNodeEJS
+WorkingDirectory=/home/pi/Tonbox
 
 # Statt eines hartcodierten "/home/pi/.nvm/versions/node/vX.Y.Z/bin/node" - nvm installiert
 # je nach Zeitpunkt/Geraet eine andere exakte Patch-Version, ein fest eingetragener Pfad
@@ -18,7 +18,7 @@ WorkingDirectory=/home/pi/ArchaicNodeEJS
 # jede nvm-Installation besitzt) wird selbst eingebunden, danach loest "nvm use" ueber die
 # .nvmrc-Datei im WorkingDirectory (pinnt nur Major-Version "21", nicht den exakten Patch)
 # die passende installierte Version auf.
-ExecStart=/bin/bash -c 'export NVM_DIR="/home/pi/.nvm"; . "$NVM_DIR/nvm.sh" --no-use; nvm use >/dev/null; exec node /home/pi/ArchaicNodeEJS/server.js'
+ExecStart=/bin/bash -c 'export NVM_DIR="/home/pi/.nvm"; . "$NVM_DIR/nvm.sh" --no-use; nvm use >/dev/null; exec node /home/pi/Tonbox/server.js'
 
 Restart=always
 RestartSec=5

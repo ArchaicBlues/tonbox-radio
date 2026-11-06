@@ -10,7 +10,7 @@
 
 c=0
 #echo $i
-rm -f /home/pi/ArchaicNodeEJS/help/btDevice
+rm -f /home/pi/Tonbox/help/btDevice
 #run forever
 while [ 1 ]
 do
@@ -18,7 +18,7 @@ do
 	#echo $TEST
 	if [[ $TEST == *'Device'* ]]; then
 		if [ $c == 0 ]; then
-			touch /home/pi/ArchaicNodeEJS/help/btDevice
+			touch /home/pi/Tonbox/help/btDevice
 			c=1
 			echo "connected"
 #			amixer -c 0 sset PCM Playback Volume 100% 100% unmute
@@ -26,7 +26,7 @@ do
 		fi
 	else
 		if [ $c == 1 ]; then
-			rm -f /home/pi/ArchaicNodeEJS/help/btDevice
+			rm -f /home/pi/Tonbox/help/btDevice
 			c=0
 			echo "not connected"
 #			amixer -c $1 sset 'Analogue' 0% 0% unmute

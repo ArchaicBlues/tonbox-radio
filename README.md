@@ -38,9 +38,9 @@ sudo apt update
 sudo apt install -y git npm
 
 # get the app
-git clone https://github.com/archaicblues/tonbox-media.git
-mv tonbox-media ArchaicNodeEJS
-cd ArchaicNodeEJS
+git clone https://github.com/ArchaicBlues/tonbox-radio.git
+mv tonbox-radio Tonbox
+cd Tonbox
 
 # passwordless sudo for this user - the app calls sudo in many places and
 # would otherwise hang on the first prompt once running unattended at boot
@@ -129,7 +129,7 @@ audio output from the web UI.
 
 A ready-made unit file is provided at
 [filter/conf/userServices/Tonbox.service](filter/conf/userServices/Tonbox.service).
-It assumes the default `pi` user and the `/home/pi/ArchaicNodeEJS` install path from
+It assumes the default `pi` user and the `/home/pi/Tonbox` install path from
 the Installation steps above — adjust `WorkingDirectory` if yours differs. `ExecStart`
 sources nvm's core `nvm.sh` script directly and then runs `nvm use` rather than a
 hardcoded version path, since nvm installs a different exact patch version depending

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-INSTALL_DIR="/home/pi/ArchaicNodeEJS"
+INSTALL_DIR="/home/pi/Tonbox"
 SETTINGS_FILE="$INSTALL_DIR/.settings.conf"
 DOWNLOAD_URL="https://archaicblues.de/tonbox-media/checkout/download.php"
 
@@ -63,4 +63,4 @@ fi
 
 echo "Starting apply phase..."
 bash "$WORKDIR/bashScript/sw_apply_update.sh"
-echo "installed" > /home/pi/ArchaicNodeEJS/help/update_status
+echo "installed" > /home/pi/Tonbox/help/update_status

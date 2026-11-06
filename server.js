@@ -2428,14 +2428,14 @@ app.get(/^\/0/i, function routeHandler(req, res) {
 
 // app.get("/css/style.css", function routeHandler(req, res) {
 //     //console.log("app-get:", `${req.method} ${req.url}`)
-//     p = settings.installDir + "/ArchaicNodeEJS/views/css/style.css"
+//     p = settings.installDir + "/views/css/style.css"
 //     //console.log(p)
 //     sendHLS(res, p)
 //     return
 // })
 // app.get("/glass-theme.css", function routeHandler(req, res) {
 //     //console.log("app-get:", `${req.method} ${req.url}`)
-//     p = settings.installDir + "/ArchaicNodeEJS/views/css/glass-theme.css"
+//     p = settings.installDir + "/views/css/glass-theme.css"
 //     //console.log(p)
 //     sendHLS(res, p)
 //     return
@@ -2561,7 +2561,7 @@ app.get("/funcSSE", function routeHandler(req, res) {
    //ist die Event-Stream-Route geöffnet und man kann Text-Events senden ohne das man im Browser immer F5 drücken muss
    //um z.B. ein Update eines andauernden Prozesses (recording, analyzing etc.) zu visualisieren
 
-   //    if (req.url.search(settings.installDir + "/ArchaicNodeEJS/funcSSE") >= 0) {
+   //    if (req.url.search(settings.installDir + "/funcSSE") >= 0) {
         //console.log("funcSSE Url: " + req.url)
         const sse = SSE(res);
         var data = "none"

@@ -20,7 +20,7 @@
         //It will send a new HTTP GET request to the server...
 
         let show = ""
-        const es = new EventSource("http://" + "<%= ip %>" + ":8000" + "<%= sysdir %>" + "/ArchaicNodeEJS/funcSSE");
+        const es = new EventSource("http://" + "<%= ip %>" + ":8000" + "<%= sysdir %>" + "/funcSSE");
 
         const listener = function (event) {
             //alert("Event Listner: Type=" + event.type + ", data=" + event.data + " url=" + es.url)
