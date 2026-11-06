@@ -88,21 +88,30 @@ directory, which is git-ignored and never shared.
 ## Using a DAC HAT for Line-Out (optional)
 
 The app auto-detects any attached audio HAT as a Line-Out target, regardless
-of model - no code change needed. What *is* needed, for any HAT, is enabling
-its kernel driver by adding the matching `dtoverlay=` line to
+of model - no code change needed. What *is* needed, for most HATs, is
+enabling the kernel driver by adding the matching `dtoverlay=` line to
 `/boot/firmware/config.txt` (under `[all]`) and rebooting - this is a boot-time
 setting the Pi's firmware reads before Linux (and this app) ever starts, so
-it can't be selected automatically at runtime. Common HATs:
+it can't be selected automatically at runtime.
+
+A few boards are genuine HAT-spec-compliant hardware with a pre-programmed
+ID EEPROM, which the Pi's firmware reads at boot to load the right overlay
+automatically - **no `dtoverlay=` line needed** for these: the official
+**Raspberry Pi DAC+ / DAC Pro / DigiAMP+ / Codec Zero** boards, and the
+**JustBoom** DAC/Digi/Amp HATs (you still need the onboard-audio-off step
+below for either). Everything else below needs the manual line:
 
 | HAT / chip | `dtoverlay=` |
 |---|---|
-| Raspberry Pi DAC+ / DAC Pro / DigiAMP+ (formerly IQaudio) | `iqaudio-dacplus` / `iqaudio-digiampplus` |
 | HiFiBerry DAC / DAC+ Light / Zero, generic PCM5102A boards | `hifiberry-dac` |
 | HiFiBerry DAC+ / DAC+ Pro / Amp2 (PCM5122) | `hifiberry-dacplus` |
 | HiFiBerry DAC2 HD | `hifiberry-dacplushd` |
-| Allo Boss DAC | `allo-boss-dac-pcm512x-audio` |
-| JustBoom DAC / Amp | `justboom-dac` |
+| Allo Boss DAC (explicitly *not* HAT-compliant despite its own EEPROM) | `allo-boss-dac-pcm512x-audio` |
 | WM8960-based boards (e.g. Waveshare) | `wm8960-soundcard` |
+
+(HiFiBerry boards technically support the same EEPROM auto-config, but only
+after a separate one-time flashing step via HiFiBerry's own tool - out of
+the box they still need the `dtoverlay=` line above.)
 
 Also disable the onboard audio in the same `[all]` section, so it doesn't
 compete with the HAT:
