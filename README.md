@@ -136,6 +136,15 @@ mkdir -p ~/.config/systemd/user
 cp filter/conf/userServices/Tonbox.service ~/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable --now Tonbox.service
+
+# Tonbox.service is a USER unit (WantedBy=default.target in the user manager,
+# not the system one) - without lingering, systemd only starts the user
+# manager (and therefore Tonbox.service) once "pi" actually logs in via SSH
+# or the console, not on every boot. This is easy to miss during testing
+# since an SSH login shortly after boot starts it as a side effect - but on
+# a real power-up with no keyboard/monitor and no SSH session, Tonbox never
+# starts at all without this.
+sudo loginctl enable-linger pi
 ```
 
 ### Bluetooth speaker mode
