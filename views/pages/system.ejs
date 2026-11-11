@@ -263,13 +263,10 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
                     <div class="tv-empty"><%- updateCheck.message %></div>
                     <% if (updateCheck.reason !== 'limit_reached') { %>
                         <div style="margin-top:10px; font-size:0.9rem;">
-                            <label style="cursor:pointer; display:block; margin-bottom:6px;">
+                            <label style="cursor:pointer; display:block;">
                                 <input type="checkbox" id="agbAccept" onchange="updateBuyButtonState()">
                                 Ich akzeptiere die <a href="/agb" target="_blank" rel="noopener">AGB &amp; Hinweise zur Zahlungsabwicklung</a>
-                            </label>
-                            <label style="cursor:pointer; display:block;">
-                                <input type="checkbox" id="withdrawalWaiver" onchange="updateBuyButtonState()">
-                                Ich stimme ausdrücklich zu, dass mit der Ausführung des Vertrags (Freischaltung
+                                und stimme ausdrücklich zu, dass mit der Ausführung des Vertrags (Freischaltung
                                 des Updates) vor Ablauf der Widerrufsfrist begonnen wird. Mir ist bekannt, dass
                                 ich dadurch mein <a href="/agb#widerruf" target="_blank" rel="noopener">Widerrufsrecht</a> verliere.
                             </label>
@@ -283,14 +280,14 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
                         //Entwicklerkonsole trivial umgehen) und mit Zeitstempel protokolliert - sonst gaebe
                         //es ueberhaupt keinen Nachweis, dass diese Zustimmung tatsaechlich erteilt wurde.
                         function updateBuyButtonState(){
-                            var ok = document.getElementById('agbAccept').checked && document.getElementById('withdrawalWaiver').checked;
+                            var ok = document.getElementById('agbAccept').checked;
                             var btn = document.getElementById('buyUpdateBtn');
                             btn.classList.toggle('btn-disabled', !ok);
                             btn.dataset.enabled = ok;
                         }
                         function goToBuyUpdate(){
                             if (document.getElementById('buyUpdateBtn').dataset.enabled !== 'true') {
-                                alert('Bitte zuerst beide Haken oben setzen.');
+                                alert('Bitte zuerst den Haken oben setzen.');
                                 return;
                             }
                             //Serverseitiger Roundtrip (/buyUpdate: Zustimmungs-Pruefung/Protokollierung,
