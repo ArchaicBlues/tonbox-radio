@@ -304,6 +304,7 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
                             onclick="goToBuyUpdate()">
                             Jetzt bezahlen (Stripe) - <%- updatePrice %>&euro;<%- stripeSandbox ? ' [Test]' : '' %>
                         </button>
+                        <br><br><br><br>
                         <div id="buyRedirectOverlay" style="display:none; position:fixed; inset:0; background:#000;
                             color:#00d2ff; z-index:9999; flex-direction:column; justify-content:center;
                             align-items:center; font-size:1.3rem; font-family:sans-serif;">
@@ -312,8 +313,9 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
                             <div>Weiterleitung zu Stripe …</div>
                         </div>
                         <style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+                        <div style="text-align:center;"><strong>ODER:</strong></div>
                         <div class="tv-empty" style="margin-top:10px;">
-                            Oder: Die MAC-Adresse dieser Tonbox ist nicht registriert, aber bereits mit einer
+                            Die MAC-Adresse dieser Tonbox ist nicht registriert, aber bereits mit einer
                             anderen Tonbox bezahlt? Email und Secret dieser bezahlten Tonbox eingeben und
                             oben erneut auf "Update Tonbox" klicken:
                         </div>
