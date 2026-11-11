@@ -2059,10 +2059,26 @@ app.post('/slideButton', urlencodedParser, function (req, res) {
 
 
 
-app.get('/system', function (req, res) {
+app.get('/system', async function (req, res) {
     console.log("rememberDB="+rememberDB + " " + req.url + ", body:" + JSON.stringify(req.body))
     if (!procStatus.stat){
         stopMusicPlay(constants.AUDIO_ALL)
+        if (req.query.stripeSuccess === '1') {
+            //Rueckkehr von Stripe nach erfolgreicher Zahlung (siehe GET /buyUpdate) - direkt
+            //dieselbe Freigabe-Pruefung+Update-Logik wie beim "Update Tonbox"-Klick anstossen,
+            //statt erst wieder die (jetzt veraltete) Bezahl-Maske zu zeigen. Kurze Wiederholung
+            //davor: Stripes Webhook (markiert die Zahlung serverseitig als bezahlt) kann dem
+            //Browser-Redirect hierher um ein paar Sekunden hinterherhinken - ohne das wuerde
+            //die allererste Pruefung trotz soeben erfolgter Zahlung oft noch "nicht bezahlt"
+            //sehen und genau die Maske erneut zeigen, die wir hier vermeiden wollen.
+            for (let attempt = 0; attempt < 3; attempt++) {
+                updateCheck = await checkUpdateAllowed()
+                if (updateCheck.allowed) break
+                if (attempt < 2) await new Promise(r => setTimeout(r, 2000))
+            }
+            await updateTonbox(res, null, null)
+            return
+        }
         doSystem(res)
     }else{
         procStatus.text = "Abgelehnt: ein recording Prozess läuft"
@@ -2101,6 +2117,10 @@ app.get('/buyUpdate', async function (req, res) {
         doSystem(res)
         return
     }
+    //Bloße Basis-URL, KEIN eigener Pfad/Query hier anhängen - createCheckoutSession.php
+    //baut success_url selbst als `returnUrl + '/system?stripeSuccess=1'` zusammen; ein
+    //hier schon angehängter Pfad würde zu einer doppelten/kaputten URL führen (siehe
+    //GET /system unten, das genau dieses "stripeSuccess=1" ausliest).
     const returnUrl = req.protocol + "://" + req.get('host')
     const url = await getStripeCheckoutUrl(returnUrl)
     if (url) {
