@@ -57,6 +57,8 @@ node server.js
 
 ## Opening the app
 
+Use an Ethernet cable connection for the initial installation. 
+You can configure WiFi later via the WebApp.
 Open `http://tonbox.local:8000` in a browser on any device in the same local
 network (replace `tonbox` with your Pi's actual hostname if you changed it).
 If `.local` addresses don't resolve on your network/device, use the Pi's IP
