@@ -29,6 +29,8 @@ are present in the UI but intentionally disabled as no-ops, marked with
   unattended as a systemd service after a reboot.
 - System packages used by various features (ffmpeg, mpv, bluetooth, imaging,
   audio - also covered in the Installation steps below).
+- Use an Ethernet cable connection for the initial installation. 
+  You can configure WiFi later via the WebApp.
 
 ## Installation
 
@@ -57,8 +59,6 @@ node server.js
 
 ## Opening the app
 
-Use an Ethernet cable connection for the initial installation. 
-You can configure WiFi later via the WebApp.
 Open `http://tonbox.local:8000` in a browser on any device in the same local
 network (replace `tonbox` with your Pi's actual hostname if you changed it).
 If `.local` addresses don't resolve on your network/device, use the Pi's IP
