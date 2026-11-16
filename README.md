@@ -1,5 +1,7 @@
 # Tonbox
 
+![Tonbox overview: inputs (internet radio, CD, USB, vinyl, VHS, local files) on the left, the web UI in the middle, outputs (tube radio, stereo, TV, Bluetooth) on the right](public/images/Overview.png)
+
 Tonbox is a Node.js/Express web application that turns a Raspberry Pi into a
 networked audio/media center: Its is a comprehensive media handler. 
 It processes audio, video, and images. 
