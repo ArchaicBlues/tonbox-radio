@@ -96,7 +96,7 @@ let constants = {
     //Marquee & ffmpegRecorder
     META_DATA_INTERVAL: 1000, //ms
     //Tonbox
-    SOFTWARE_VERSION: "271026",
+    SOFTWARE_VERSION: "BASE",
     //Stripe "Buy Now" Button (system.ejs -> /buyUpdate -> createCheckoutSession.php),
     //angezeigt wenn checkUpdateAllowed() ein Update ablehnt. Die Checkout Session wird
     //serverseitig per Stripe-API erzeugt (kein Payment Link mehr - der übernahm
@@ -107,13 +107,13 @@ let constants = {
     //Testmodus: true = Stripe-Testmodus (Testkarten, siehe https://docs.stripe.com/testing),
     //es bewegt sich nie echtes Geld - createCheckoutSession.php nutzt dann den Test Secret
     //Key. false = echter Live-Betrieb. Vor dem Launch unbedingt auf false umstellen!
-    STRIPE_SANDBOX: true,
+    STRIPE_SANDBOX: false,
     //Unabhängig von STRIPE_SANDBOX: true = Freigabe-Prüfung läuft komplett durch, aber
     //sw_update.sh wird NICHT gestartet (sicher zum Testen der Zahlungs-/Zuordnungslogik).
     //false = bei Freigabe läuft das echte Update. So kannst du z.B. mit STRIPE_SANDBOX=true
     //(Testzahlung, kein echtes Geld) UND UPDATE_DRY_RUN=false (echtes Update ausführen)
     //gleichzeitig testen.
-    UPDATE_DRY_RUN: true
+    UPDATE_DRY_RUN: false
 }
 
 module.exports = Object.freeze(constants); // freeze prevents changes by users

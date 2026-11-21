@@ -2087,7 +2087,7 @@ app.get('/system', async function (req, res) {
     }
 });
 
-//Button "Jetzt bezahlen (Stripe)" auf der System-Seite verlinkt hierher statt direkt auf
+//Button "Jetzt bezahlen" auf der System-Seite verlinkt hierher statt direkt auf
 //Stripe - so kann getStripeCheckoutUrl() die Checkout-URL erst per API erzeugen (siehe
 //funcsystem.js) und success_url/cancel_url auf genau diese Tonbox zurückzeigen lassen.
 //Serverseitige Pruefung der beiden Zustimmungs-Checkboxen auf system.ejs (AGB +
