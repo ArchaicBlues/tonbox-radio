@@ -167,10 +167,11 @@ module.exports = async function(required){
     if (old === settings.filterIndex)
       return
     await writeSettings()
-    let raw = await fsPromises.readFile("filter/eqSlider.json","utf8")
-    dat = JSON.parse(raw)
-    dat.preset = Number(settings.filterIndex)
-    await fsPromises.writeFile("filter/eqSlider.json",JSON.stringify(dat,null,2),"utf8")
+    let dat = await loadEqSlider() //repariert eine kaputte Datei gleich mit
+    if (dat){
+      dat.preset = Number(settings.filterIndex)
+      await fsPromises.writeFile("filter/eqSlider.json",JSON.stringify(dat,null,2),"utf8")
+    }
 
     
     try{
@@ -360,12 +361,91 @@ module.exports = async function(required){
     return(y)
   }
 
+  //Die 10 Baender in der Reihenfolge von Filter 1..10 in den filter/*.txt Dateien
+  const eqBands = ["f40Hz","f121Hz","f547Hz","f674Hz","f818Hz","f1503Hz","f1605Hz","f1722Hz","f4160Hz","f12000Hz"]
+  //Index in den Band-Arrays: [0]=Clear [1]=Neutral [2]=Warm [3]=Bass [4]=MyEQ
+  const eqPresetFiles = ["Clear","Neutral","Warm","Bass","MyEQ"]
+
+  this.isValidEqSlider = function(obj){
+    if (!obj || typeof obj !== "object") return false
+    for (const b of eqBands){
+      if (!Array.isArray(obj[b]) || obj[b].length < 5) return false
+      if (typeof obj[b][4] !== "number" || isNaN(obj[b][4])) return false
+    }
+    return true
+  },
+
+  //Baut eqSlider.json komplett aus filter/Clear.txt ... filter/MyEQ.txt neu auf.
+  //Rueckgabe: das neue Objekt (oder null, wenn eine Preset-Datei fehlt).
+  this.rebuildEqSliderFromFilterFiles = async function(){
+    const out = {}
+    for (const b of eqBands) out[b] = [50,50,50,50,50]
+    for (let p = 0; p < eqPresetFiles.length; p++){
+      let txt
+      try { txt = await fsPromises.readFile("filter/" + eqPresetFiles[p] + ".txt", "utf8") }
+      catch(err){ console.log("rebuildEqSliderFromFilterFiles: " + eqPresetFiles[p] + ".txt missing"); return null }
+      const lines = txt.split("\n").filter(l => l.trim().length)
+      //lines[0] = "Preamp: ...", lines[1..10] = "Filter n: ON PK Fc 40 Hz Gain 9 dB Q 0.7"
+      for (let i = 1; i <= eqBands.length && i < lines.length; i++){
+        const e = lines[i].split(" ")
+        const gain = parseFloat(e[8])
+        if (isNaN(gain)) continue
+        out[eqBands[i-1]][p] = gainToSliderVal(gain)
+      }
+    }
+    out.preset = Number(settings.filterIndex) || 0
+    await fsPromises.writeFile("filter/eqSlider.json", JSON.stringify(out,null,2), "utf8")
+    console.log("filter/eqSlider.json rebuilt from filter/*.txt")
+    return out
+  },
+
+  //Liest filter/eqSlider.json und liefert IMMER ein gueltiges Objekt (inkl. preset).
+  //Eine kaputte/leere Datei (z.B. "{}" durch einen frueheren saveFilter-Bug, siehe
+  //dort) oder eine Datei ohne "preset" (frueher von audioWeb.js so gespeichert, der
+  //Browser lehnt die Antwort dann als "incomplete" ab) wird dabei repariert und
+  //zurueckgeschrieben. Rueckgabe null nur, wenn auch der Neuaufbau scheitert.
+  this.loadEqSlider = async function(){
+    let dat = null
+    try {
+      dat = JSON.parse(await fsPromises.readFile("filter/eqSlider.json","utf8"))
+    } catch(err){
+      console.log("loadEqSlider: " + err.message)
+    }
+    if (!isValidEqSlider(dat)){
+      console.log("loadEqSlider: filter/eqSlider.json invalid, rebuilding")
+      return await rebuildEqSliderFromFilterFiles()
+    }
+    if (typeof dat.preset !== "number" || isNaN(dat.preset)){
+      dat.preset = Number(settings.filterIndex) || 0
+      await fsPromises.writeFile("filter/eqSlider.json", JSON.stringify(dat,null,2), "utf8")
+      console.log("loadEqSlider: added missing preset=" + dat.preset)
+    }
+    return dat
+  },
+
   this.saveFilter = async function (eqData){
     try{
-    //settings.filterIndex = "4"; 
+    //settings.filterIndex = "4";
     //await writeSettings()
-      await fs.writeFileSync('filter/eqSlider.json', eqData)
-      var eqSlider = JSON.parse(eqData)
+      //ERST validieren, DANN schreiben. Frueher wurde eqData ungeprueft in die Datei
+      //geschrieben - ein "{}" vom Browser (eqSlider dort noch nicht geladen) hat damit
+      //eqSlider.json dauerhaft zerstoert und den Equalizer auf allen Seiten lahmgelegt.
+      var eqSlider = null
+      try { eqSlider = JSON.parse(eqData) }
+      catch(err){ console.log("saveFilter: invalid JSON, ignored: " + eqData); return }
+      if (!isValidEqSlider(eqSlider)){
+        console.log("saveFilter: incomplete eq data, ignored: " + eqData)
+        return
+      }
+      //preset beibehalten, falls der Client keins mitschickt (audioWeb.js hat frueher
+      //preset vor dem Speichern geloescht -> Datei galt im Browser als "incomplete")
+      if (typeof eqSlider.preset !== "number" || isNaN(eqSlider.preset)){
+        let old = null
+        try { old = JSON.parse(await fsPromises.readFile("filter/eqSlider.json","utf8")) } catch(err){}
+        if (old && typeof old.preset === "number") eqSlider.preset = old.preset
+        else eqSlider.preset = Number(settings.filterIndex) || 0
+      }
+      await fsPromises.writeFile('filter/eqSlider.json', JSON.stringify(eqSlider,null,2), "utf8")
       //Slidereinstellungen in MyEQ.txt übertragen
       var cmd = "cat filter/MyEQ.txt >&1"
       var newF = await execCmd(cmd)

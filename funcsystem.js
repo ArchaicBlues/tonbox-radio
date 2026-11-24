@@ -1067,7 +1067,7 @@ module.exports = function(required){
             pageInfo = "System"
             res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:procStatus, usb:usbState, mac:mac, updateCheck:updateCheck,
             updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX, sys:sysData.toString(), settings:settings,audio:audioInfo,
-            treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, notice:notice})
+            treeH:datH, treeM:datM, treeA:datA,devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, notice:notice, mon:monSys})
             }
         }
         catch(err){
@@ -1077,7 +1077,7 @@ module.exports = function(required){
                 pageInfo = "System"
                 res.render('pages/system', {pageInfo:pageInfo,resultTV:resultTV,settings:settings, btDevice:bluez, recording:getScheduledJobsWithoutTimeout(), pState:err, usb:usbState, mac:mac, updateCheck:updateCheck,
                 updatePrice:constants.UPDATE_PRICE_EUR, stripeSandbox:constants.STRIPE_SANDBOX, sys:sysData, settings:settings,audio:audioInfo,
-                treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, notice:notice})
+                treeH:datH, treeM:datM, treeA:datA, devHome:devHome, devMusic:devMusic, devADrecords:devADrecords, notice:notice, mon:monSys})
             }
         }
     },

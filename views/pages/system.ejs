@@ -442,6 +442,23 @@ button { margin-top:25px; padding:10px 20px; border:none; border-radius:4px; cur
         <b>System Info</b><br>
         <%= sys %>
         <br><br>
+        <%
+            //Aktuelle Werte der Systemueberwachung (monSys in funcsystem.js, wird zyklisch
+            //von monitorTemperatur/monitorFreeSpace/monitorFreeMemory gefuellt). Die Rohwerte
+            //sind Shell-Ausgaben ("temp=40.9'C\n", "107G\n", "3250\n") und werden hier bereinigt.
+            var m = (typeof mon !== "undefined" && mon) ? mon : {}
+            var monTemp = (String(m.temp || "").match(/-?\d+(\.\d+)?/) || [""])[0]
+            var monSpace = String(m.space || "").trim()
+            var monMem = String(m.mem || "").trim()
+        %>
+        <b>Aktuelle Systemwerte (Stand beim Seitenaufruf)</b><br>
+        CPU Temperatur: <%= monTemp ? monTemp + " °C" : "n/a" %>
+        (Warnung ab 74 °C, automatischer Shutdown bei 80 °C)<br>
+        Freier Speicherplatz <%= devMusic %>: <%= monSpace ? monSpace : "n/a" %>
+        (Warnung unter 1G)<br>
+        Freier Hauptspeicher: <%= monMem ? monMem + " MB" : "n/a" %>
+        (Warnung unter 100 MB)
+        <br><br>
         <b>User Agent Info (Your Web Browser capability for audio visualisation)</b><br>
         <p id="ua"></p>
         <script>

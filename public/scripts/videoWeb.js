@@ -512,6 +512,12 @@ function eqGain(string,type)
 }			
 
 function loadMyEQ(){
+    if (!eqSlider || !eqSlider.f40Hz){
+        //eqSlider.json noch nicht geladen: changedEQ NICHT setzen, sonst schickt
+        //saveMyEQ() ein leeres "{}" an den Server (siehe audioWeb.js)
+        console.warn("loadMyEQ: eqSlider not loaded yet")
+        return
+    }
     if (oldCurrentFilterNum != currentFilterNum){
         console.log("loadMyEQ")
         oldCurrentFilterNum = currentFilterNum;
@@ -601,6 +607,11 @@ function volumeWEB(string,type){
 
 function saveMyEQ(){
     changedEQ = false
+    if (!eqSlider || !eqSlider.f40Hz){
+        console.warn("saveMyEQ: eqSlider not loaded, nothing to save")
+        return
+    }
+    eqSlider.preset = currentFilterNum
     console.log("save myEQ on RPI")
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/equalizer", true);

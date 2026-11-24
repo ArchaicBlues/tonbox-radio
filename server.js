@@ -2520,10 +2520,13 @@ app.get("/health", (req, res) => {
 });
 
 
-app.get("/filter/eqSlider.json", function routeHandler(req, res) {
+app.get("/filter/eqSlider.json", async function routeHandler(req, res) {
     //console.log("app-get:", `${req.method} ${req.url}`)
     p = __dirname + "/filter/eqSlider.json"
     console.log(p)
+    //loadEqSlider() (funcEqualizer.js) baut eine kaputte/unvollstaendige Datei aus
+    //filter/*.txt neu auf, damit der Browser nie ein "{}" ohne Baender bekommt
+    try { await loadEqSlider() } catch (err) { console.log("eqSlider.json repair failed: " + err) }
     sendHLS(res, p)
     return
 })

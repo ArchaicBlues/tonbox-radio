@@ -1192,6 +1192,12 @@ if (mediaElement) {
 
 
 function loadMyEQ() {
+    if (!eqSlider || !eqSlider.f40Hz) {
+        //eqSlider.json noch nicht geladen: nichts zu uebernehmen, und vor allem
+        //changedEQ NICHT setzen - sonst schickt saveMyEQ() ein leeres "{}" an den Server
+        console.warn("loadMyEQ: eqSlider not loaded yet")
+        return
+    }
     if (oldCurrentFilterNum != currentFilterNum) {
         console.log("loadMyEQ")
         oldCurrentFilterNum = currentFilterNum;
@@ -1215,6 +1221,13 @@ function eqGain(string, type) {
         return
     //string == slider position 1..100  
     var value = parseFloat(string)
+    if (!eqSlider || !eqSlider.f40Hz) {
+        //ohne geladene eqSlider.json wuerden die eqSlider.fXXHz[4]-Zuweisungen unten
+        //mit einem TypeError abbrechen - Daten nachladen statt crashen
+        console.warn("eqGain: eqSlider not loaded yet, retrying getEqData()")
+        getEqData()
+        return
+    }
     loadMyEQ()
     if (audioOut.match("HTTP")) { //WEb Audio API
         var gainDb = sliderValToGain(value);
@@ -1566,8 +1579,17 @@ function setEq(i) {
 
 
 function saveMyEQ() {
-    var data = JSON.stringify(eqSlider)
     changedEQ = false
+    if (!eqSlider || !eqSlider.f40Hz) {
+        //nie ein leeres Objekt speichern - das hat frueher eqSlider.json auf dem RPI
+        //mit "{}" ueberschrieben und den Equalizer dauerhaft lahmgelegt
+        console.warn("saveMyEQ: eqSlider not loaded, nothing to save")
+        return
+    }
+    //preset mitschicken: getEqData() loescht es beim Laden, ohne preset gilt die
+    //Datei beim naechsten Laden als "incomplete" (siehe mediaShow.ejs)
+    eqSlider.preset = currentFilterNum
+    var data = JSON.stringify(eqSlider)
     console.log("save myEQ on RPI")
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/equalizer", true);

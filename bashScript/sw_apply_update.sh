@@ -114,7 +114,27 @@ sudo apt install -y avahi-daemon libnss-mdns avahi-utils
 #setfacl udev Regel setzen für access auf dev/video0 
 sudo apt install -y acl 
 
-sudo hostnamectl set-hostname tonbox
+# Hostname NUR setzen, wenn er noch der Raspberry-Pi-OS-Standard ist. Frueher stand hier
+# ein bedingungsloses "set-hostname tonbox" - das hat bei jedem Update (z.B. tonbox-radio
+# -> tonbox-media) einen vom Benutzer ueber "IP, Gateway, Hostname" (configSettings in
+# funcsystem.js) gewaehlten Namen stillschweigend wieder auf "tonbox" zurueckgesetzt.
+CURRENT_HOST="$(hostname 2>/dev/null || true)"
+case "$CURRENT_HOST" in
+  ""|raspberrypi|localhost|localhost.localdomain)
+    echo "Setting default hostname 'tonbox' (was '${CURRENT_HOST:-<empty>}')"
+    sudo hostnamectl set-hostname tonbox
+    # 127.0.1.1-Zeile in /etc/hosts mitziehen (wie configSettings), sonst meldet sudo
+    # "unable to resolve host" und der mDNS-Name passt nicht zum Hostnamen
+    if grep -q '^127\.0\.1\.1' /etc/hosts; then
+      sudo sed -i 's/^127\.0\.1\.1.*/127.0.1.1\ttonbox/' /etc/hosts
+    else
+      echo -e "127.0.1.1\ttonbox" | sudo tee -a /etc/hosts >/dev/null
+    fi
+    ;;
+  *)
+    echo "Keeping existing hostname '$CURRENT_HOST'"
+    ;;
+esac
 sudo systemctl enable avahi-daemon
 sudo systemctl start avahi-daemon
 
